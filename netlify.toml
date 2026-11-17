@@ -1,0 +1,14 @@
+# Netlify: deploy the folder as-is. No build step (plain HTML, CSS and JS).
+# Every push to main on GitHub triggers a new deploy.
+[build]
+  publish = "."
+  command = ""
+
+# Basic security headers for every page.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
