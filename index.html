@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATS_Breaker: see your resume the way the ATS does</title>
+<meta name="description" content="Add your resume and the job description. In under a minute you get three checks and a ranked list of what to change. Free, no account, nothing stored.">
+<meta name="theme-color" content="#0E1419">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=2">
+<script src="js/scan-keywords.js?v=2" defer></script>
+<script src="js/scan-read.js?v=2" defer></script>
+<script src="js/scan-score.js?v=2" defer></script>
+<script src="js/scan-ui.js?v=2" defer></script>
+<script src="js/main.js?v=2" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="hdr">
+ <div class="wrap">
+  <a class="logo" href="index.html">ATS<span>_</span>Breaker</a>
+  <span class="pill">Free · no account · nothing stored</span>
+  <nav class="nav" aria-label="Site"><a href="example-report.html">Example report</a><a href="how-scoring-works.html">How scoring works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a></nav>
+ </div>
+</header>
+<main id="main">
+<section class="wrap hero" aria-labelledby="hero-title">
+ <h1 id="hero-title">See your resume the way <em>the ATS does.</em></h1>
+ <p class="lede">Add your resume and the job description. In under a minute you get three checks and a ranked list of what to change.</p>
+ <div class="checks"><span class="tag">1 · Parse check: can a machine read it?</span><span class="tag">2 · Match check: which keywords are missing?</span><span class="tag">3 · Recruiter check: will a person keep reading?</span></div>
+
+ <!-- Scan form. The scan runs in the browser (js/scan-*.js); nothing is uploaded. -->
+ <form class="scan" id="scan" name="scan" method="post" enctype="multipart/form-data" aria-label="Scan your resume" data-local-scan>
+  <div class="field">
+   <div class="field-h"><label for="resume">Your resume</label><span class="lab" id="resume-hint">PDF or DOCX · max 5 MB</span></div>
+   <div class="drop" data-drop>
+    <input type="file" id="resume" name="resume" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" aria-describedby="resume-hint resume-err">
+    <b aria-hidden="true">Drop your resume here</b>
+    <small><span aria-hidden="true">or <span class="link">choose a file</span> · </span>or <button type="button" class="link link-btn" data-paste-toggle aria-controls="resume-text-field" aria-expanded="false">paste the text</button></small>
+   </div>
+   <div class="file" data-file hidden><span class="doc" data-file-type>PDF</span><span class="name" data-file-name></span><span class="mono" data-file-size></span><span class="ic ok" role="img" aria-label="Ready">✓</span></div>
+   <div class="field" id="resume-text-field" hidden>
+    <label class="visually-hidden" for="resume_text">Resume text</label>
+    <textarea class="paste" id="resume_text" name="resume_text" aria-describedby="resume-err"></textarea>
+   </div>
+   <p class="field-err" id="resume-err" hidden></p>
+  </div>
+  <div class="field">
+   <div class="field-h"><label for="job_description">Job description</label><span class="lab" data-count>0 characters</span></div>
+   <textarea class="jd" id="job_description" name="job_description" required aria-describedby="job_description-err"></textarea>
+   <p class="field-err" id="job_description-err" hidden></p>
+   <!-- Filled in live from the job description (js/scan-ui.js). -->
+   <div class="detect" data-detected hidden><span>We detected:</span></div>
+  </div>
+  <div class="go">
+   <button class="btn btn-p" type="submit">Scan my resume</button>
+   <span class="privacy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Processed for this scan, then deleted. Never stored or used for training. <a href="privacy.html">Privacy</a></span></span>
+   <a class="try link" href="example-report.html">No files handy? Try an example</a>
+  </div>
+  <div class="form-msg" data-form-msg role="status" hidden></div>
+ </form>
+
+ <!-- Scanning state: shown while a scan runs. -->
+ <div class="scanning" role="status" data-scanning hidden>
+  <span class="lab">Scanning</span>
+  <span class="stp done"><i aria-hidden="true">✓</i>Reading your file</span>
+  <span class="stp now"><i aria-hidden="true"></i>Matching keywords</span>
+  <span class="stp wait"><i aria-hidden="true">3</i>Recruiter review</span>
+  <button type="button" class="link link-btn cancel" data-cancel>Cancel</button>
+ </div>
+
+ <!-- Error state: shown when a PDF has no readable text. -->
+ <div class="err" role="alert" data-error hidden>
+  <i class="ic part" aria-hidden="true">◐</i>
+  <div>
+   <h2>This PDF is a scanned image</h2>
+   <p>We can only read text, and this file is a picture of a page. Export it again from Word or Google Docs as a PDF, or paste the text instead. Your file wasn't stored.</p>
+   <div class="acts"><button type="button" class="btn btn-p btn-sm" data-choose-file>Choose another file</button><button type="button" class="btn btn-s btn-sm" data-paste-instead>Paste text instead</button></div>
+  </div>
+ </div>
+</section>
+
+<!-- Results: rendered here by js/scan-ui.js after a scan. -->
+<div id="results" hidden></div>
+</main>
+<footer class="ftr">
+ <div class="wrap">
+  <span>Free · no account · nothing stored. Built by Prathamesh Shinde · <a class="link" href="https://prathameshshinde.com" rel="noopener">prathameshshinde.com</a></span>
+  <nav aria-label="Footer"><a href="how-scoring-works.html">How scoring works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a><a href="report.html">Report a wrong result</a></nav>
+ </div>
+</footer>
+</body>
+</html>

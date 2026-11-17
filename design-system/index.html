@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATS_Breaker X-ray</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=Zilla+Slab:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--v-bg:#f4f4f2;--v-panel:#fff;--v-ink:#1b1b1a;--v-muted:#5e5d58;--v-rule:#dedcd5;--v-on:#1b1b1a;--v-on-ink:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--v-bg:#161615;--v-panel:#212120;--v-ink:#efeee9;--v-muted:#a8a69e;--v-rule:#383835;--v-on:#efeee9;--v-on-ink:#161615}}
+:root[data-theme="dark"]{--v-bg:#161615;--v-panel:#212120;--v-ink:#efeee9;--v-muted:#a8a69e;--v-rule:#383835;--v-on:#efeee9;--v-on-ink:#161615}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--v-bg);color:var(--v-ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.5;overflow-x:hidden}
+.v-top{padding:20px 16px 0;max-width:1480px;margin:0 auto}
+.v-top h1{font-size:20px;font-weight:600;margin:0 0 4px}
+.v-top p{margin:0;color:var(--v-muted);font-size:14px;max-width:95ch}
+.v-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 0;padding-bottom:16px;border-bottom:1px solid var(--v-rule)}
+.v-tabs button{font:inherit;font-size:14px;padding:7px 14px;border-radius:8px;border:1px solid var(--v-rule);background:var(--v-panel);color:var(--v-ink);cursor:pointer}
+.v-tabs button[aria-selected="true"]{background:var(--v-on);color:var(--v-on-ink);border-color:var(--v-on)}
+.v-main{max-width:1480px;margin:0 auto;padding:16px}
+.v-row{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px;margin-bottom:28px}
+@media (max-width:900px){.v-row{grid-template-columns:minmax(0,1fr)}}
+.spec{background:var(--v-panel);border:1px solid var(--v-rule);border-radius:10px;padding:16px;align-self:start}
+.spec .n{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+.spec h2{font-size:18px;margin:0;font-weight:600}
+.spec .mode{font-size:12px;color:var(--v-muted);white-space:nowrap}
+.spec .feel{margin:6px 0 14px;color:var(--v-muted);font-size:14px}
+.spec h4{margin:14px 0 6px;font-size:12px;font-weight:600;color:var(--v-muted);letter-spacing:.04em;text-transform:uppercase}
+.swl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.swl div{display:flex;align-items:center;gap:8px;font-size:12.5px;min-width:0}
+.swl span.c{flex:none;width:22px;height:22px;border-radius:5px;border:1px solid rgba(128,128,128,.35)}
+.swl code{font-family:ui-monospace,monospace;font-size:12px;color:var(--v-muted)}
+.swl b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spec dl{margin:0;display:grid;grid-template-columns:78px minmax(0,1fr);gap:6px 10px;font-size:13.5px}
+.spec dt{color:var(--v-muted)}.spec dd{margin:0}
+.spec .open{margin-top:14px;font:inherit;font-size:14px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--v-rule);background:transparent;color:var(--v-ink);cursor:pointer}
+.mini{border:1px solid var(--v-rule);border-radius:10px;overflow:hidden;background:var(--v-panel)}
+.mini .inner{width:1280px;transform-origin:0 0}
+.full{border:1px solid var(--v-rule);border-radius:10px;overflow:hidden}
+
+/* ===== shared tool structure ===== */
+.pg{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:var(--fs);line-height:1.55;container-type:inline-size;font-variant-numeric:tabular-nums}
+.pg *{box-sizing:border-box}
+.pg a{color:inherit}
+.pg button{font:inherit;color:inherit}
+.pg :focus-visible{outline:2px solid var(--focus,var(--action));outline-offset:2px}
+.wrap{max-width:var(--max);margin:0 auto;padding-left:var(--px);padding-right:var(--px)}
+.mono{font-family:var(--f-mono)}
+.lab{font-family:var(--f-mono);font-size:var(--fs-xs);letter-spacing:var(--ls-lab,.02em);text-transform:var(--tt-lab,none);color:var(--muted)}
+/* header */
+.hdr{border-bottom:var(--bw) solid var(--line);background:var(--hdr-bg,var(--bg))}
+.hdr .wrap{display:flex;align-items:center;gap:24px;padding-top:14px;padding-bottom:14px}
+.logo{font-family:var(--f-logo,var(--f-mono));font-weight:700;font-size:var(--fs-logo);text-decoration:none;letter-spacing:var(--ls-logo,0)}
+.logo span{color:var(--logo-us,var(--action))}
+.nav{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px 22px;font-size:var(--fs-sm)}
+.nav a{text-decoration:none;color:var(--ink2)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:var(--r-pill);border:1px solid var(--line);font-size:var(--fs-xs);color:var(--ink2);white-space:nowrap;font-family:var(--f-mono)}
+/* hero + scan */
+.hero{padding-top:var(--sec-y);padding-bottom:var(--sec-y)}
+.hero h1{margin:0;font-family:var(--f-display);font-weight:var(--w-display);font-size:var(--fs-h1);line-height:1.08;letter-spacing:var(--ls-display,0);max-width:18ch}
+.hero .lede{margin:14px 0 0;font-size:var(--fs-lede);color:var(--ink2);max-width:62ch;line-height:1.5}
+.checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.scan{margin-top:var(--gap-l);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:var(--gap);padding:var(--scan-pad);background:var(--scan-bg);border:var(--card-bw) solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow)}
+.field{display:grid;gap:8px;align-content:start;min-width:0}
+.field-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:600;font-size:var(--fs-sm)}
+.drop{display:grid;place-items:center;gap:6px;text-align:center;min-height:170px;padding:18px;border:var(--drop-bw,1.5px) dashed var(--drop-line);border-radius:var(--r-in);background:var(--in-bg)}
+.drop b{font-size:var(--fs)}
+.drop small{color:var(--muted);font-size:var(--fs-xs)}
+.file{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-in);background:var(--card);font-size:var(--fs-sm)}
+.file .doc{flex:none;width:26px;height:32px;border:1.5px solid var(--ink2);border-radius:3px;display:grid;place-items:end center;font-size:8px;font-weight:700;padding-bottom:2px;font-family:var(--f-mono)}
+.file span.mono{color:var(--muted);font-size:var(--fs-xs);margin-left:auto}
+.jd{min-height:212px;padding:12px 14px;border:1px solid var(--in-line);border-radius:var(--r-in);background:var(--in-bg);font-size:var(--fs-sm);color:var(--ink2);line-height:1.55;overflow:hidden}
+.detect{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:var(--fs-xs);color:var(--ink2)}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:var(--r-tag);background:var(--tag-bg);color:var(--ink);font-size:var(--fs-xs);font-weight:600;font-family:var(--f-tag,var(--f-body));white-space:nowrap}
+.go{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding-top:4px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--btn-h);padding:0 22px;border-radius:var(--r-btn);font-weight:700;font-size:var(--fs);text-decoration:none;border:var(--btn-bw,0) solid transparent;cursor:pointer;white-space:nowrap}
+.btn-p{background:var(--action);color:var(--on-action)!important}
+.btn-p:hover{background:var(--action-h)}
+.btn-s{background:transparent;color:var(--ink)!important;border:var(--btn-s-bw,1.5px) solid var(--btn-s-line,var(--ink))}
+.btn-sm{min-height:34px;padding:0 12px;font-size:var(--fs-sm);font-weight:600}
+.privacy{display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);color:var(--ink2)}
+.privacy svg{width:16px;height:16px;flex:none}
+.privacy a,.link{text-decoration:underline;text-underline-offset:3px;color:var(--link)}
+.try{font-size:var(--fs-sm)}
+/* scanning */
+.scanning{display:flex;flex-wrap:wrap;align-items:center;gap:10px 28px;padding:14px 18px;margin-top:var(--gap);border:var(--card-bw) solid var(--line);border-radius:var(--r-card);background:var(--card);font-size:var(--fs-sm)}
+.stp{display:inline-flex;align-items:center;gap:8px}
+.stp i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;border:1.5px solid var(--muted);color:var(--muted)}
+.stp.done i{background:var(--ok);border-color:var(--ok);color:var(--on-ok)}
+.stp.now i{border-color:var(--action);border-top-color:transparent;animation:spin 1s linear infinite}
+.stp.wait{color:var(--muted)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.stp.now i{animation:none;border-top-color:var(--action)}}
+/* results */
+.sec{padding-top:var(--sec-y)}
+.sec-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:var(--gap)}
+.sec-h h2{margin:0;font-family:var(--f-display);font-weight:var(--w-display);font-size:var(--fs-h2);line-height:1.15;letter-spacing:var(--ls-display,0)}
+.sec-h .lab{margin-left:auto}
+.est{font-size:var(--fs-xs);color:var(--muted);margin:-4px 0 var(--gap)}
+.sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
+.gate{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--gap)}
+.card{background:var(--card);border:var(--card-bw) solid var(--line);border-radius:var(--r-card);padding:var(--card-pad);box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.score{display:flex;align-items:baseline;gap:6px}
+.score b{font-family:var(--f-num,var(--f-display));font-size:var(--fs-score);font-weight:var(--w-score,700);line-height:1}
+.score.word b{font-size:calc(var(--fs-score) * .62)}
+.score span{color:var(--muted);font-size:var(--fs-sm);font-family:var(--f-mono)}
+.why{font-size:var(--fs-xs);color:var(--link);text-decoration:underline;text-underline-offset:3px}
+.segs{display:flex;gap:3px;height:12px;margin:12px 0 10px}
+.segs i{position:relative;flex:var(--wt) 1 0;background:var(--seg-bg);border-radius:var(--r-seg);overflow:hidden}
+.segs i::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--f);background:var(--seg-fill)}
+.comp{display:grid;gap:4px;font-size:var(--fs-xs)}
+.comp div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;color:var(--ink2)}
+.comp div b{font-family:var(--f-mono);font-weight:500;color:var(--ink)}
+.band{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin:12px 0 8px}
+.band span{padding:6px 4px;text-align:center;font-size:var(--fs-xs);font-weight:600;background:var(--seg-bg);color:var(--muted);border-radius:var(--r-seg)}
+.band span.on{background:var(--band-on);color:var(--on-band)}
+.status{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:var(--fs-sm)}
+.ic{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:700;font-style:normal;flex:none}
+.ic.ok{background:var(--ok-bg);color:var(--ok)}
+.ic.part{background:var(--part-bg);color:var(--part)}
+.ic.miss{background:var(--miss-bg);color:var(--miss)}
+.flags{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px;font-size:var(--fs-sm);color:var(--ink2)}
+.flags li{display:flex;gap:8px;align-items:flex-start}
+.fixes{display:grid;gap:var(--fix-gap)}
+.fix{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 14px;align-items:start;padding:var(--fix-pad);background:var(--card);border:var(--card-bw) solid var(--line);border-radius:var(--r-card)}
+.fix .n{font-family:var(--f-num,var(--f-mono));font-weight:700;font-size:var(--fs-fixn);color:var(--fixn);line-height:1.1;min-width:24px}
+.fix p{margin:0;font-size:var(--fs-sm);line-height:1.5}
+.fix p b{font-weight:700}
+.fix .loc{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:var(--fs-xs);color:var(--muted)}
+.gain{display:inline-flex;align-items:center;padding:3px 9px;border-radius:var(--r-tag);background:var(--gain-bg);color:var(--gain);font-family:var(--f-mono);font-size:var(--fs-xs);font-weight:600;white-space:nowrap}
+.chk{width:20px;height:20px;border:1.5px solid var(--ink2);border-radius:var(--r-chk);display:grid;place-items:center;margin-top:1px}
+.chk.on{background:var(--ok);border-color:var(--ok);color:var(--on-ok);font-size:12px;font-weight:700}
+.fix.done p{color:var(--muted);text-decoration:line-through}
+.delta{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;margin-top:var(--gap);padding:14px 18px;border-radius:var(--r-card);background:var(--delta-bg);border:var(--card-bw) solid var(--line)}
+.delta .from,.delta .to{font-family:var(--f-num,var(--f-display));font-weight:700;font-size:28px;line-height:1}
+.delta .from{color:var(--muted);text-decoration:line-through;text-decoration-thickness:2px}
+.delta .arrow{color:var(--muted)}
+.delta .up{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--r-tag);background:var(--ok-bg);color:var(--ok);font-weight:700;font-family:var(--f-mono);font-size:var(--fs-sm)}
+.delta p{margin:0;font-size:var(--fs-sm);color:var(--ink2)}
+/* parse preview */
+.parse{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap)}
+.pane{border:var(--card-bw) solid var(--line);border-radius:var(--r-card);overflow:hidden;background:var(--card);min-width:0}
+.pane-h{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--pane-h-bg)}
+.pane-h b{font-size:var(--fs-sm)}
+.paper{margin:16px;aspect-ratio:1/1.05;background:#FFFFFF;color:#222;border:1px solid #D8D8D8;padding:18px;display:grid;grid-template-columns:34% 1fr;gap:14px;font-size:9.5px;line-height:1.45;font-family:Georgia,serif;align-content:start;align-items:start}
+.paper .side{background:#EEF1F5;padding:10px;display:grid;gap:8px;align-content:start}
+.paper .hd{grid-column:1/-1;border-bottom:1px solid #ccc;padding-bottom:8px;font-family:Arial,sans-serif}
+.paper .hd b{font-size:15px;display:block}
+.paper h6{margin:0 0 3px;font-size:9.5px;font-family:Arial,sans-serif;letter-spacing:.06em}
+.paper p{margin:0}
+.flagbox{outline:2px solid var(--part);outline-offset:2px;position:relative}
+.flagbox::after{content:attr(data-flag);position:absolute;right:-4px;top:-14px;background:var(--part);color:var(--on-part);font:700 9px/1 var(--f-mono);padding:3px 5px;border-radius:2px}
+.xray{margin:0;padding:16px;font-family:var(--f-mono);font-size:12px;line-height:1.65;background:var(--xray-bg);color:var(--xray-ink);white-space:pre-wrap;min-height:100%}
+.xray .sec-t{color:var(--xray-sec);font-weight:600}
+.xray .bad{background:var(--part-bg);color:var(--xray-ink);box-shadow:inset 0 -2px 0 var(--part)}
+.xray .gone{color:var(--muted)}
+.parse-flags{margin-top:var(--gap);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap)}
+.pf{display:flex;gap:10px;padding:12px 14px;border:var(--card-bw) solid var(--line);border-radius:var(--r-card);background:var(--card);font-size:var(--fs-sm)}
+.pf p{margin:2px 0 0;color:var(--ink2)}
+/* keywords */
+.kw-tools{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:var(--gap)}
+.ft{padding:5px 12px;border-radius:var(--r-tag);border:1px solid var(--line);background:var(--card);font-size:var(--fs-xs);font-weight:600}
+.ft.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.kw{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:var(--gap)}
+.kwt{width:100%;border-collapse:collapse;font-size:var(--fs-sm);background:var(--card);border:var(--card-bw) solid var(--line);border-radius:var(--r-card);overflow:hidden}
+.kwt th{text-align:left;padding:9px 12px;font-family:var(--f-mono);font-size:var(--fs-xs);font-weight:500;color:var(--muted);border-bottom:1px solid var(--line);background:var(--pane-h-bg)}
+.kwt td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.kwt tr:last-child td{border-bottom:0}
+.kwt td.w{font-weight:600}
+.kwt td small{display:block;color:var(--muted);font-size:var(--fs-xs)}
+.jdhl{padding:16px 18px;border:var(--card-bw) solid var(--line);border-radius:var(--r-card);background:var(--card);font-size:var(--fs-sm);line-height:1.8;color:var(--ink2)}
+.hl-ok{background:var(--ok-bg);color:var(--ink);padding:1px 3px;border-radius:2px;box-shadow:inset 0 -2px 0 var(--ok)}
+.hl-part{background:var(--part-bg);color:var(--ink);padding:1px 3px;border-radius:2px;box-shadow:inset 0 -2px 0 var(--part)}
+.hl-miss{color:var(--ink);padding:1px 3px;text-decoration:underline wavy var(--miss);text-underline-offset:4px;text-decoration-thickness:1.5px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:var(--fs-xs);color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+/* recruiter */
+.rub{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
+.rub .card p{margin:6px 0 0;font-size:var(--fs-sm);color:var(--ink2)}
+.rub blockquote{margin:10px 0 0;padding:8px 10px;border-left:var(--q-bw,3px) solid var(--q-line);background:var(--q-bg);font-family:var(--f-mono);font-size:var(--fs-xs);color:var(--ink2)}
+.bl{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);font-weight:700}
+.bl.strong{color:var(--ok)}.bl.comp{color:var(--part)}.bl.weak{color:var(--miss)}
+/* actions + feedback */
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:var(--gap)}
+.fb{display:flex;align-items:center;gap:10px;margin-top:var(--gap);font-size:var(--fs-sm);color:var(--ink2)}
+/* error */
+.err{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;padding:18px 20px;border:var(--card-bw) solid var(--line);border-left:var(--err-edge,var(--card-bw)) solid var(--part);border-radius:var(--r-card);background:var(--card)}
+.err h3{margin:0;font-family:var(--f-display);font-weight:var(--w-display);font-size:var(--fs-h3)}
+.err p{margin:6px 0 0;font-size:var(--fs-sm);color:var(--ink2);max-width:70ch}
+.err .acts{margin-top:12px}
+/* footer */
+.ftr{margin-top:var(--sec-y);border-top:var(--bw) solid var(--line);background:var(--ftr-bg,var(--bg))}
+.ftr .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px;padding-top:22px;padding-bottom:28px;font-size:var(--fs-sm);color:var(--ink2)}
+.ftr nav{display:flex;flex-wrap:wrap;gap:6px 18px}
+.ftr a{text-decoration:none}
+@container (max-width:900px){.scan,.parse,.kw,.gate,.parse-flags{grid-template-columns:minmax(0,1fr)}.sum,.rub{grid-template-columns:minmax(0,1fr)}}
+@container (max-width:640px){.wrap{padding-left:16px;padding-right:16px}.nav{display:none}.hero h1{font-size:calc(var(--fs-h1)*.72)}}
+
+/* ===== 1. Proof Sheet ===== */
+.d-ps{--bg:#F7F3EA;--card:#FFFDF8;--ink:#1E1C18;--ink2:#3E3A33;--muted:#625C52;--line:#DCD4C4;--action:#1F4BA5;--action-h:#183C86;--on-action:#FFFFFF;--link:#1F4BA5;
+ --ok:#2E6E45;--ok-bg:#E1EEDD;--on-ok:#FFFFFF;--part:#94580A;--part-bg:#F8E7BF;--on-part:#FFFFFF;--miss:#A2412A;--miss-bg:#F6E0D8;
+ --f-display:"Newsreader",Georgia,serif;--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace;--f-logo:"IBM Plex Mono",monospace;--f-num:"Newsreader",Georgia,serif;--w-display:600;
+ --fs:16px;--fs-sm:15px;--fs-xs:12.5px;--fs-logo:18px;--fs-h1:58px;--fs-lede:20px;--fs-h2:32px;--fs-h3:21px;--fs-score:56px;--fs-fixn:28px;
+ --r-card:0;--r-in:0;--r-btn:0;--r-tag:2px;--r-pill:2px;--r-seg:0;--r-chk:0;--bw:1px;--card-bw:1px;--shadow:none;
+ --max:1180px;--px:44px;--sec-y:64px;--gap:18px;--gap-l:32px;--card-pad:22px;--scan-pad:26px;--fix-pad:18px 20px;--fix-gap:12px;--btn-h:50px;
+ --scan-bg:#FFFDF8;--in-bg:#FBF8F1;--in-line:#DCD4C4;--drop-line:#B9AE98;--tag-bg:#EFE8DA;--seg-bg:#EFE8DA;--seg-fill:#1E1C18;--band-on:#1E1C18;--on-band:#FFFDF8;
+ --gain-bg:#E3EAF7;--gain:#1F4BA5;--fixn:#1F4BA5;--delta-bg:#FFFDF8;--pane-h-bg:#FBF8F1;--xray-bg:#FBF8F1;--xray-ink:#1E1C18;--xray-sec:#1F4BA5;--q-line:#F2D35A;--q-bg:#FDF6D8}
+.d-ps .hero h1 em{font-style:italic;background:linear-gradient(transparent 58%,#F6DF7A 58%);padding:0 4px}
+.d-ps .sec{border-top:1px solid var(--line);margin-top:var(--sec-y)}
+.d-ps .sec-h h2{font-style:normal}
+.d-ps .hl-ok{background:#F6E58F;box-shadow:none}
+.d-ps .hl-part{background:#F8E7BF;box-shadow:none}
+
+/* ===== 2. Clean Lab ===== */
+.d-cl{--bg:#F6F7F9;--card:#FFFFFF;--ink:#12161C;--ink2:#353C46;--muted:#5A6370;--line:#DDE1E7;--action:#3A4FD8;--action-h:#2F41B5;--on-action:#FFFFFF;--link:#3A4FD8;
+ --ok:#16794A;--ok-bg:#E1F3E9;--on-ok:#FFFFFF;--part:#965200;--part-bg:#FCEFD6;--on-part:#FFFFFF;--miss:#B2361F;--miss-bg:#FBE6E1;
+ --f-display:"Hanken Grotesk",system-ui,sans-serif;--f-body:"Hanken Grotesk",system-ui,sans-serif;--f-mono:"JetBrains Mono",ui-monospace,monospace;--f-num:"Hanken Grotesk",sans-serif;--w-display:700;--ls-display:-0.02em;
+ --fs:14.5px;--fs-sm:13.5px;--fs-xs:12px;--fs-logo:16px;--fs-h1:40px;--fs-lede:17px;--fs-h2:20px;--fs-h3:17px;--fs-score:44px;--fs-fixn:15px;
+ --r-card:6px;--r-in:6px;--r-btn:6px;--r-tag:4px;--r-pill:999px;--r-seg:2px;--r-chk:4px;--bw:1px;--card-bw:1px;--shadow:0 1px 2px rgba(18,22,28,.05);
+ --max:1280px;--px:28px;--sec-y:32px;--gap:12px;--gap-l:22px;--card-pad:16px;--scan-pad:18px;--fix-pad:12px 14px;--fix-gap:8px;--btn-h:42px;
+ --scan-bg:#FFFFFF;--in-bg:#F9FAFB;--in-line:#DDE1E7;--drop-line:#B8C0CB;--tag-bg:#EEF0F4;--seg-bg:#EEF0F4;--seg-fill:#3A4FD8;--band-on:#3A4FD8;--on-band:#FFFFFF;
+ --gain-bg:#E9ECFC;--gain:#3A4FD8;--fixn:#5A6370;--delta-bg:#FFFFFF;--pane-h-bg:#F9FAFB;--xray-bg:#F9FAFB;--xray-ink:#12161C;--xray-sec:#3A4FD8;--q-line:#3A4FD8;--q-bg:#F4F5FB;--hdr-bg:#FFFFFF}
+
+/* ===== 3. X-ray ===== */
+.d-xr{--bg:#0E1419;--card:#141C23;--ink:#E4ECF1;--ink2:#C3D0D9;--muted:#93A4B1;--line:#263440;--action:#7FD6E6;--action-h:#A4E3EE;--on-action:#0E1419;--link:#9EE0EC;--focus:#9EE0EC;
+ --ok:#5BD08F;--ok-bg:rgba(91,208,143,.14);--on-ok:#0E1419;--part:#F2C14E;--part-bg:rgba(242,193,78,.15);--on-part:#0E1419;--miss:#FF8A73;--miss-bg:rgba(255,138,115,.14);
+ --f-display:"JetBrains Mono",ui-monospace,monospace;--f-body:"Source Sans 3",system-ui,sans-serif;--f-mono:"JetBrains Mono",ui-monospace,monospace;--f-num:"JetBrains Mono",monospace;--w-display:600;--w-score:600;--tt-lab:uppercase;--ls-lab:.08em;--ls-display:-0.02em;
+ --fs:16px;--fs-sm:15px;--fs-xs:12px;--fs-logo:17px;--fs-h1:44px;--fs-lede:18px;--fs-h2:22px;--fs-h3:18px;--fs-score:46px;--fs-fixn:15px;
+ --r-card:4px;--r-in:4px;--r-btn:4px;--r-tag:3px;--r-pill:3px;--r-seg:1px;--r-chk:3px;--bw:1px;--card-bw:1px;--shadow:none;
+ --max:1240px;--px:36px;--sec-y:48px;--gap:14px;--gap-l:28px;--card-pad:18px;--scan-pad:20px;--fix-pad:14px 16px;--fix-gap:10px;--btn-h:46px;
+ --scan-bg:#141C23;--in-bg:#0B1115;--in-line:#263440;--drop-line:#3B5263;--tag-bg:#1C2730;--seg-bg:#1C2730;--seg-fill:#7FD6E6;--band-on:#7FD6E6;--on-band:#0E1419;
+ --gain-bg:rgba(127,214,230,.13);--gain:#9EE0EC;--fixn:#7FD6E6;--delta-bg:#141C23;--pane-h-bg:#101820;--xray-bg:#081014;--xray-ink:#BFEFF7;--xray-sec:#7FD6E6;--q-line:#7FD6E6;--q-bg:#0B1115;--hdr-bg:#0B1115;--ftr-bg:#0B1115;--logo-us:#7FD6E6}
+.d-xr .xray{background-image:linear-gradient(rgba(127,214,230,.05) 1px,transparent 1px);background-size:100% 21px}
+.d-xr .hero h1{text-transform:none}
+.d-xr .file .doc{border-color:#93A4B1}
+.d-xr .chk{border-color:#93A4B1}
+
+/* ===== 4. Two Gates ===== */
+.d-tg{--bg:#FBF7F2;--card:#FFFFFF;--ink:#221E1A;--ink2:#433C35;--muted:#645B52;--line:#ECE3D8;--action:#221E1A;--action-h:#3A332D;--on-action:#FFFFFF;--link:#8A3D12;
+ --ok:#1F6E4A;--ok-bg:#DDF0E5;--on-ok:#FFFFFF;--part:#8F5300;--part-bg:#FBEBCB;--on-part:#FFFFFF;--miss:#A8452E;--miss-bg:#F8E1D9;
+ --f-display:"Bricolage Grotesque",system-ui,sans-serif;--f-body:"Atkinson Hyperlegible",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace;--f-logo:"Bricolage Grotesque",sans-serif;--f-num:"Bricolage Grotesque",sans-serif;--w-display:800;--ls-display:-0.025em;--w-score:800;
+ --fs:16.5px;--fs-sm:15.5px;--fs-xs:13px;--fs-logo:21px;--fs-h1:60px;--fs-lede:20px;--fs-h2:32px;--fs-h3:21px;--fs-score:58px;--fs-fixn:30px;
+ --r-card:18px;--r-in:14px;--r-btn:999px;--r-tag:999px;--r-pill:999px;--r-seg:6px;--r-chk:6px;--bw:0;--card-bw:0;--shadow:0 1px 2px rgba(34,30,26,.04),0 6px 20px rgba(34,30,26,.06);
+ --max:1200px;--px:44px;--sec-y:64px;--gap:18px;--gap-l:36px;--card-pad:24px;--scan-pad:28px;--fix-pad:18px 22px;--fix-gap:12px;--btn-h:54px;
+ --scan-bg:#FFFFFF;--in-bg:#FBF7F2;--in-line:#ECE3D8;--drop-line:#CDBFAE;--tag-bg:#F3ECE3;--seg-bg:#F3ECE3;--seg-fill:#221E1A;--band-on:#C2652A;--on-band:#FFFFFF;
+ --gain-bg:#FBE3D2;--gain:#8A3D12;--fixn:#C2652A;--delta-bg:#E8F3EC;--pane-h-bg:#FBF7F2;--xray-bg:#EDF1F4;--xray-ink:#1E252B;--xray-sec:#3B5A72;--q-line:#C2652A;--q-bg:#FBF1E9;--logo-us:#C2652A}
+.d-tg .sum>.card:nth-child(1),.d-tg .sum>.card:nth-child(3){background:#EAF0F4}
+.d-tg .sum>.card:nth-child(2){background:#F9E8DA}
+.d-tg .sum>.card:nth-child(1)::before,.d-tg .sum>.card:nth-child(3)::before{content:"Machine gate";display:block;font:700 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:#3B5A72;margin-bottom:10px}
+.d-tg .sum>.card:nth-child(2)::before{content:"Human gate";display:block;font:700 11px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:#8A3D12;margin-bottom:10px}
+.d-tg .scan{border:0}
+.d-tg .hdr{border-bottom:1px solid #ECE3D8}
+.d-tg .ftr{border-top:1px solid #ECE3D8}
+
+/* ===== 5. Checklist Slab ===== */
+.d-cs{--bg:#EEEDE6;--card:#FFFFFF;--ink:#161616;--ink2:#353535;--muted:#575757;--line:#161616;--action:#161616;--action-h:#333333;--on-action:#FFFFFF;--link:#161616;
+ --ok:#1E6B3A;--ok-bg:#DCEEDD;--on-ok:#FFFFFF;--part:#8A5200;--part-bg:#F6E5BF;--on-part:#FFFFFF;--miss:#A33B22;--miss-bg:#F5DDD5;
+ --f-display:"Zilla Slab",Georgia,serif;--f-body:"Work Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,monospace;--f-logo:"Zilla Slab",serif;--f-num:"Zilla Slab",serif;--w-display:700;
+ --fs:15.5px;--fs-sm:14.5px;--fs-xs:12.5px;--fs-logo:22px;--fs-h1:50px;--fs-lede:18px;--fs-h2:28px;--fs-h3:20px;--fs-score:54px;--fs-fixn:34px;
+ --r-card:0;--r-in:0;--r-btn:0;--r-tag:0;--r-pill:0;--r-seg:0;--r-chk:0;--bw:2px;--card-bw:2px;--shadow:none;--btn-bw:2px;--btn-s-bw:2px;
+ --max:1220px;--px:36px;--sec-y:48px;--gap:16px;--gap-l:28px;--card-pad:20px;--scan-pad:22px;--fix-pad:16px 18px;--fix-gap:0;--btn-h:50px;
+ --scan-bg:#FFFFFF;--in-bg:#FFFFFF;--in-line:#161616;--drop-line:#161616;--drop-bw:2px;--tag-bg:#EEEDE6;--seg-bg:#E2E1D9;--seg-fill:#161616;--band-on:#161616;--on-band:#FFFFFF;
+ --gain-bg:#FFE58A;--gain:#161616;--fixn:#E2711D;--delta-bg:#FFFFFF;--pane-h-bg:#EEEDE6;--xray-bg:#FFFFFF;--xray-ink:#161616;--xray-sec:#161616;--q-line:#E2711D;--q-bg:#FBF3E8;--logo-us:#E2711D}
+.d-cs .fixes{border:2px solid #161616}
+.d-cs .fix{border:0;border-bottom:2px dashed #161616;border-radius:0}
+.d-cs .fix:last-child{border-bottom:0}
+.d-cs .sec-h{border-bottom:2px solid #161616;padding-bottom:8px}
+.d-cs .sec-h h2::before{content:"☐ ";font-family:var(--f-body);font-weight:400}
+.d-cs .kwt,.d-cs .pane,.d-cs .jdhl{border-width:2px}
+.d-cs .kwt td,.d-cs .kwt th{border-bottom-color:#C9C7BD}
+.d-cs .hero h1{max-width:20ch}
+.d-cs .drop{border-style:dashed}
+.d-cs .chk{border:2px solid #161616}
+</style>
+</head>
+<body>
+<header class="v-top">
+  <h1>ATS_Breaker: X-ray</h1>
+  <p>Your chosen direction: a dark film ground with calm X-ray cyan for actions. JetBrains Mono carries headings, scores and labels, and Source Sans 3 the body. 4px corners, 1px slate borders, no glow, medium density. Faint scan lines appear only in the ATS view. The resume, job description and scores are invented example content.</p>
+  <nav class="v-tabs" role="tablist" aria-label="Directions">
+    <button role="tab" data-view="xr" aria-selected="true">X-ray</button>
+  </nav>
+</header>
+<main class="v-main" id="stage"></main>
+<script>
+const DIRS=[
+ {id:"ps",n:1,name:"Proof Sheet",mode:"Light · warm paper",feel:"Your resume on an editor's desk, marked up in highlighter and blue pencil: careful, literate, clearly on your side.",
+  pal:[["Paper","#F7F3EA"],["Sheet","#FFFDF8"],["Ink","#1E1C18"],["Muted","#625C52"],["Rule","#DCD4C4"],["Blue pencil (action)","#1F4BA5"],["Highlighter","#F6E58F"],["Matched","#2E6E45"],["Partial","#94580A"],["Missing","#A2412A"]],
+  disp:"Newsreader 600 (editorial serif) for headings and scores",body:"IBM Plex Sans 400–600, 16px",mono:"IBM Plex Mono for the ATS view, labels and logo",
+  corners:"Square, 0px",borders:"1px warm hairlines; sections split by rules; evidence quotes as highlighter blocks",shadow:"None",density:"Generous. 64px sections, 58px headline"},
+ {id:"cl",n:2,name:"Clean Lab",mode:"Light · cool",feel:"A well-made diagnostic instrument: crisp panels, tight data and nothing decorative between you and the result.",
+  pal:[["Canvas","#F6F7F9"],["Panel","#FFFFFF"],["Ink","#12161C"],["Muted","#5A6370"],["Border","#DDE1E7"],["Indigo (action)","#3A4FD8"],["Matched","#16794A"],["Partial","#965200"],["Missing","#B2361F"]],
+  disp:"Hanken Grotesk 700 (grotesk)",body:"Hanken Grotesk 400–600, 14.5px",mono:"JetBrains Mono for labels, counts and the ATS view",
+  corners:"6px panels, 4px tags",borders:"1px cool-grey borders on every panel",shadow:"A faint 1px lift on panels",density:"Tight. 32px sections, 12px gutters"},
+ {id:"xr",n:3,name:"X-ray",mode:"Dark · film",feel:"A light box for your resume: the machine view is the hero, calm and clinical, with no hacker theatrics.",
+  pal:[["Film black","#0E1419"],["Panel","#141C23"],["Text","#E4ECF1"],["Muted","#93A4B1"],["Border","#263440"],["X-ray cyan (action)","#7FD6E6"],["Matched","#5BD08F"],["Partial","#F2C14E"],["Missing","#FF8A73"]],
+  disp:"JetBrains Mono 600 (monospace) for headings, scores and labels",body:"Source Sans 3 400–700, 16px",mono:"JetBrains Mono throughout the data",
+  corners:"4px",borders:"1px slate borders; faint scan lines in the ATS view only",shadow:"None",density:"Medium. 48px sections"},
+ {id:"tg",n:4,name:"Two Gates",mode:"Light · warm",feel:"Friendly and plain-spoken, built around the big idea: a cool machine gate and a warm human gate, side by side.",
+  pal:[["Cream","#FBF7F2"],["Card","#FFFFFF"],["Ink","#221E1A"],["Muted","#645B52"],["Machine gate","#EAF0F4"],["Human gate","#F9E8DA"],["Apricot accent","#C2652A"],["Charcoal (action)","#221E1A"],["Matched","#1F6E4A"],["Missing","#A8452E"]],
+  disp:"Bricolage Grotesque 800 (characterful grotesque)",body:"Atkinson Hyperlegible 400/700, 16.5px (legibility-first)",mono:"IBM Plex Mono for small labels",
+  corners:"Rounded 18px cards, pill buttons and tags",borders:"None; cards on soft tone",shadow:"Soft, low shadows on cards",density:"Generous. 64px sections, 54px buttons"},
+ {id:"cs",n:5,name:"Checklist Slab",mode:"Light · cool stone",feel:"A pre-flight checklist you tick off: square boxes, dashed tear lines and big numbers that say what to do next.",
+  pal:[["Stone","#EEEDE6"],["Card","#FFFFFF"],["Ink","#161616"],["Muted","#575757"],["Box line","#161616"],["Black (action)","#161616"],["Pencil orange (numbers)","#E2711D"],["Gain marker","#FFE58A"],["Matched","#1E6B3A"],["Missing","#A33B22"]],
+  disp:"Zilla Slab 700 (slab serif)",body:"Work Sans 400–600, 15.5px",mono:"IBM Plex Mono for the ATS view and labels",
+  corners:"Square, 0px",borders:"2px black boxes; dashed tear lines between fixes; checkbox section headings",shadow:"None",density:"Medium. 48px sections"}
+];
+const LOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const I={ok:'<i class="ic ok" aria-hidden="true">✓</i>',part:'<i class="ic part" aria-hidden="true">◐</i>',miss:'<i class="ic miss" aria-hidden="true">✕</i>'};
+function page(){return `
+<header class="hdr"><div class="wrap"><a class="logo" href="#">ATS<span>_</span>Breaker</a><span class="pill">Free · no account · nothing stored</span><nav class="nav" aria-label="Site"><a href="#">Example report</a><a href="#">How scoring works</a><a href="#">Privacy</a><a href="#">About</a></nav></div></header>
+<main>
+<section class="wrap hero" aria-label="Scan">
+ <h1>See your resume the way <em>the ATS does.</em></h1>
+ <p class="lede">Add your resume and the job description. In under a minute you get three checks and a ranked list of what to change.</p>
+ <div class="checks"><span class="tag">1 · Parse check: can a machine read it?</span><span class="tag">2 · Match check: which keywords are missing?</span><span class="tag">3 · Recruiter check: will a person keep reading?</span></div>
+ <div class="scan">
+  <div class="field"><div class="field-h"><span>Your resume</span><span class="lab">PDF or DOCX · max 5 MB</span></div>
+   <div class="drop"><b>Drop your resume here</b><small>or <span class="link">choose a file</span> · or <span class="link">paste the text</span></small></div>
+   <div class="file"><span class="doc">PDF</span><span>sample-resume.pdf</span><span class="mono">184 KB</span><span class="ic ok" aria-label="Ready">✓</span></div></div>
+  <div class="field"><div class="field-h"><span>Job description</span><span class="lab">1,842 characters</span></div>
+   <div class="jd">Site Reliability Engineer, Northwind Cloud (Dublin, hybrid). You'll keep our customer platform reliable as it scales. Required: 2+ years running production on Kubernetes, Terraform, CI/CD pipelines, Prometheus and Grafana, Python, and on-call incident response. Preferred: SLOs and error budgets, Go, AWS…</div>
+   <div class="detect"><span>We detected:</span><span class="tag">Site Reliability Engineer</span><span class="tag">Mid-level</span><span class="tag">9 required · 6 preferred</span><span class="link">Edit</span></div></div>
+  <div class="go"><a class="btn btn-p" href="#">Scan my resume</a><span class="privacy">${LOCK}<span>Processed for this scan, then deleted. Never stored or used for training. <a href="#">Privacy</a></span></span><a class="try link" href="#">No files handy? Try an example</a></div>
+ </div>
+ <div class="scanning" role="status"><span class="lab">Scanning · about 20 seconds</span><span class="stp done"><i>✓</i>Reading your file</span><span class="stp now"><i></i>Matching keywords</span><span class="stp wait"><i>3</i>Recruiter review</span><a class="link" href="#" style="margin-left:auto">Cancel</a></div>
+</section>
+<section class="wrap sec" aria-label="Results summary">
+ <div class="sec-h"><h2>Results: Site Reliability Engineer, Northwind Cloud</h2><span class="lab">Scan 2 of 2 · same job description</span></div>
+ <p class="est">Scores are estimates of fit. They don't reproduce any employer's system. <a class="link" href="#">How scoring works</a></p>
+ <div class="sum">
+  <div class="card"><div class="card-h"><b>ATS match</b><a class="why" href="#">Why 71?</a></div><div class="score"><b>71</b><span>/ 100</span></div>
+   <div class="segs" aria-hidden="true"><i style="--wt:40;--f:65%"></i><i style="--wt:10;--f:80%"></i><i style="--wt:20;--f:75%"></i><i style="--wt:10;--f:90%"></i><i style="--wt:20;--f:65%"></i></div>
+   <div class="comp"><div>Hard skills<b>26 / 40</b></div><div>Job title<b>8 / 10</b></div><div>Experience and seniority<b>15 / 20</b></div><div>Education and certifications<b>9 / 10</b></div><div>Parse quality<b>13 / 20</b></div></div></div>
+  <div class="card"><div class="card-h"><b>Recruiter readiness</b><a class="why" href="#">Why?</a></div><div class="score word"><b>Competitive</b></div>
+   <div class="band" aria-label="Band: Competitive"><span>Needs work</span><span class="on">Competitive</span><span>Strong</span></div>
+   <div class="comp"><div>Rubric score<b>64 / 100</b></div><div>Strongest<b>Action-led bullets</b></div><div>Weakest<b>Measurable impact</b></div></div></div>
+  <div class="card"><div class="card-h"><b>Parse status</b><a class="why" href="#">See ATS view</a></div><div class="status">${I.part}2 issues to fix</div>
+   <ul class="flags"><li>${I.part}<span>Two-column layout: your skills sidebar is merged into your experience.</span></li><li>${I.part}<span>Contact details sit in the page header, which many ATSs skip.</span></li><li>${I.ok}<span>Dates, job titles and sections were read correctly.</span></li></ul></div>
+ </div>
+ <div class="delta" aria-label="Rescan change"><span class="lab">Since your first scan</span><span class="from">58</span><span class="arrow" aria-hidden="true">→</span><span class="to">71</span><span class="up">▲ +13</span><p>4 fixes resolved. Hard skills +8, parse quality +5.</p></div>
+ <div class="sec-h" style="margin-top:var(--gap-l)"><h2 style="font-size:var(--fs-h3)">Top 3 fixes</h2><a class="link" href="#" style="font-size:var(--fs-sm)">See all 7</a></div>
+ <div class="fixes">
+  <div class="fix"><span class="n">1</span><div><p><b>Terraform is required and appears 4 times in the job description.</b> You list it in Skills, but no role mentions it. Add it to a bullet where you used it.</p><div class="loc"><a class="link" href="#">Your resume: Skills, line 3</a><a class="link" href="#">Job description: Required, line 2</a></div></div><span class="gain">ATS +6</span></div>
+  <div class="fix"><span class="n">2</span><div><p><b>Your contact details are in the page header.</b> Many ATSs don't read headers, so your email and phone may be lost. Move them into the body, under your name.</p><div class="loc"><a class="link" href="#">Your resume: header</a></div></div><span class="gain">Parse +4</span></div>
+  <div class="fix"><span class="n">3</span><div><p><b>Only 2 of 14 bullets show a measurable result.</b> Add a number to your three most recent bullets: time saved, incidents reduced, or scale handled.</p><div class="loc"><a class="link" href="#">Your resume: Experience, role 1</a></div></div><span class="gain">Recruiter: impact</span></div>
+ </div>
+</section>
+<section class="wrap sec" aria-label="Parse preview">
+ <div class="sec-h"><h2>Parse preview</h2><span class="lab">How an ATS reads your file</span></div>
+ <div class="parse">
+  <div class="pane"><div class="pane-h"><b>Your resume</b><span class="lab">sample-resume.pdf · page 1</span></div>
+   <div class="paper"><div class="hd flagbox" data-flag="HEADER"><b>Aoife Byrne</b>aoife.byrne@email.ie · +353 87 000 0000 · Dublin</div>
+    <div class="side flagbox" data-flag="COLUMN"><div><h6>SKILLS</h6><p>Kubernetes (K8s) · Terraform · GitLab CI · Prometheus · Python · Linux</p></div><div><h6>CERTIFICATIONS</h6><p>AWS Solutions Architect – Associate</p></div></div>
+    <div><h6>EXPERIENCE</h6><p><b>Junior DevOps Engineer</b>, Harbour Analytics · 2023–now</p><p>• Built deployment pipelines in GitLab CI for 12 services.</p><p>• Ran K8s clusters for staging and production.</p><p>• Set up Prometheus alerts for the payments team.</p><h6 style="margin-top:8px">EDUCATION</h6><p>MSc Cloud Computing · 2023</p></div></div></div>
+  <div class="pane"><div class="pane-h"><b>ATS view</b><span class="lab">extracted text · 5 sections</span></div>
+<pre class="xray"><span class="gone">[header not extracted]</span>
+<span class="sec-t">EXPERIENCE</span>
+<span class="bad">SKILLS Kubernetes (K8s) · Terraform ·</span> Junior DevOps
+<span class="bad">GitLab CI · Prometheus · Python</span> Engineer,
+Harbour Analytics 2023–now
+• Built deployment pipelines in GitLab CI
+  for 12 services.
+<span class="bad">CERTIFICATIONS AWS Solutions</span> • Ran K8s
+clusters for staging and production.
+• Set up Prometheus alerts for the
+  payments team.
+<span class="sec-t">EDUCATION</span>
+MSc Cloud Computing 2023
+<span class="sec-t">CONTACT</span>  <span class="gone">— not found</span></pre></div>
+ </div>
+ <div class="parse-flags"><div class="pf">${I.part}<div><b>Two columns</b><p>Your sidebar text is read in the middle of your job title, so "Junior DevOps Engineer" is split in two. Use a single column.</p></div></div><div class="pf">${I.part}<div><b>Contact details in the header</b><p>Your name, email and phone weren't extracted. Put them in the first lines of the page body.</p></div></div></div>
+</section>
+<section class="wrap sec" aria-label="Keywords">
+ <div class="sec-h"><h2>Keywords</h2><span class="lab">15 found in the job description</span></div>
+ <div class="kw-tools"><span class="ft on">All 15</span><span class="ft">Matched 8</span><span class="ft">Partial 3</span><span class="ft">Missing 4</span><span class="ft">Required only</span></div>
+ <div class="kw"><table class="kwt"><thead><tr><th>Keyword</th><th>Weight</th><th>Status</th><th>Where it appears</th></tr></thead><tbody>
+  <tr><td class="w">Kubernetes</td><td>Required</td><td><span class="status">${I.ok}Matched</span></td><td>As "K8s", in 1 bullet<small>Backed by experience</small></td></tr>
+  <tr><td class="w">Terraform</td><td>Required</td><td><span class="status">${I.part}Partial</span></td><td>Skills list only<small>No bullet shows it used</small></td></tr>
+  <tr><td class="w">CI/CD</td><td>Required</td><td><span class="status">${I.part}Partial</span></td><td>Related: "GitLab CI"<small>Counts toward CI/CD</small></td></tr>
+  <tr><td class="w">Prometheus</td><td>Required</td><td><span class="status">${I.ok}Matched</span></td><td>Skills and 1 bullet</td></tr>
+  <tr><td class="w">Incident response</td><td>Required</td><td><span class="status">${I.miss}Missing</span></td><td>Not found</td></tr>
+  <tr><td class="w">SLOs</td><td>Preferred</td><td><span class="status">${I.miss}Missing</span></td><td>Not found</td></tr>
+ </tbody></table>
+ <div class="jdhl"><span class="lab">Job description, highlighted</span><p style="margin:8px 0 0">Required: 2+ years running production on <span class="hl-ok">Kubernetes</span>, <span class="hl-part">Terraform</span>, <span class="hl-part">CI/CD</span> pipelines, <span class="hl-ok">Prometheus</span> and <span class="hl-ok">Grafana</span>, <span class="hl-ok">Python</span>, and on-call <span class="hl-miss">incident response</span>. Preferred: <span class="hl-miss">SLOs</span> and error budgets, <span class="hl-miss">Go</span>, <span class="hl-ok">AWS</span>.</p>
+  <div class="legend"><span>${I.ok}Matched</span><span>${I.part}Partial</span><span>${I.miss}Missing</span></div></div></div>
+</section>
+<section class="wrap sec" aria-label="Recruiter review">
+ <div class="sec-h"><h2>Recruiter review</h2><span class="lab">6 rubric items · published on How scoring works</span></div>
+ <div class="rub">
+  <div class="card"><div class="card-h"><b>Measurable impact</b><span class="bl weak">${I.miss}Needs work</span></div><p>2 of 14 bullets show a result with a number.</p><blockquote>"Ran K8s clusters for staging and production."</blockquote></div>
+  <div class="card"><div class="card-h"><b>Action-led bullets</b><span class="bl strong">${I.ok}Strong</span></div><p>13 of 14 bullets start with a clear verb.</p><blockquote>"Built deployment pipelines in GitLab CI for 12 services."</blockquote></div>
+  <div class="card"><div class="card-h"><b>Seniority fit</b><span class="bl comp">${I.part}Competitive</span></div><p>The role asks for 2+ years. Your relevant experience totals about 2 years.</p><blockquote>"Junior DevOps Engineer, 2023–now"</blockquote></div>
+ </div>
+</section>
+<section class="wrap sec" aria-label="Full fix list">
+ <div class="sec-h"><h2>All fixes, ranked by estimated gain</h2><span class="lab">Tick them off as you go · this session only</span></div>
+ <div class="fixes">
+  <div class="fix done"><span class="chk on" aria-label="Done">✓</span><div><p>Move your contact details out of the page header.</p><div class="loc"><span>Resolved on rescan</span></div></div><span class="gain">Parse +4</span></div>
+  <div class="fix"><span class="chk" aria-label="Not done"></span><div><p><b>Add Terraform to a bullet where you used it.</b> It's required and only appears in your Skills list.</p><div class="loc"><a class="link" href="#">Skills, line 3</a></div></div><span class="gain">ATS +6</span></div>
+  <div class="fix"><span class="chk" aria-label="Not done"></span><div><p><b>Show on-call or incident work.</b> "Incident response" is required. If you've handled alerts or outages, say so in a bullet.</p><div class="loc"><a class="link" href="#">Job description: Required</a></div></div><span class="gain">ATS +5</span></div>
+ </div>
+ <div class="acts"><a class="btn btn-p" href="#">Rescan with edited resume</a><a class="btn btn-s" href="#">Swap job description</a><a class="btn btn-s" href="#">Download report (PDF)</a><a class="btn btn-s" href="#">Copy fix list</a></div>
+ <div class="fb"><span>Was this result accurate?</span><a class="btn btn-s btn-sm" href="#">Yes</a><a class="btn btn-s btn-sm" href="#">No, report it</a></div>
+</section>
+<section class="wrap sec" aria-label="Error state example">
+ <div class="err" role="alert">${I.part}<div><h3>This PDF is a scanned image</h3><p>We can only read text, and this file is a picture of a page. Export it again from Word or Google Docs as a PDF, or paste the text instead. Your file wasn't stored.</p><div class="acts"><a class="btn btn-p btn-sm" href="#">Choose another file</a><a class="btn btn-s btn-sm" href="#">Paste text instead</a></div></div></div>
+</section>
+</main>
+<footer class="ftr"><div class="wrap"><span>Free · no account · nothing stored. Built by Prathamesh Shinde · <a class="link" href="#">prathameshshinde.com</a></span><nav aria-label="Footer"><a href="#">How scoring works</a><a href="#">Privacy</a><a href="#">About</a><a href="#">Report a wrong result</a></nav></div></footer>`;}
+function spec(d,withOpen){const sw=a=>a.map(([n,h])=>`<div><span class="c" style="background:${h}"></span><span style="min-width:0"><b>${n}</b><br><code>${h}</code></span></div>`).join("");
+ return `<aside class="spec"><div class="n"><h2>${d.n} · ${d.name}</h2><span class="mode">${d.mode}</span></div><p class="feel">${d.feel}</p>
+<h4>Palette</h4><div class="swl">${sw(d.pal)}</div>
+<h4>Type</h4><dl><dt>Display</dt><dd>${d.disp}</dd><dt>Body</dt><dd>${d.body}</dd><dt>Mono</dt><dd>${d.mono}</dd></dl>
+<h4>Form</h4><dl><dt>Corners</dt><dd>${d.corners}</dd><dt>Borders</dt><dd>${d.borders}</dd><dt>Shadow</dt><dd>${d.shadow}</dd><dt>Density</dt><dd>${d.density}</dd></dl>
+${withOpen?`<button class="open" data-goto="${d.id}">Open full page</button>`:""}</aside>`;}
+DIRS.splice(0,DIRS.length,DIRS.find(d=>d.id==="xr"));
+const stage=document.getElementById("stage");const CLIP=1250;
+function fit(){document.querySelectorAll(".mini").forEach(m=>{const z=m.clientWidth/1280;m.querySelector(".inner").style.transform=`scale(${z})`;m.style.height=Math.round(CLIP*z)+"px";});}
+function render(v){document.querySelectorAll(".v-tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===v));
+ if(v==="all"){stage.innerHTML=DIRS.map(d=>`<div class="v-row">${spec(d,true)}<div class="mini" aria-label="${d.name} preview"><div class="inner"><div class="pg d-${d.id}">${page()}</div></div></div></div>`).join("");fit();}
+ else{const d=DIRS.find(x=>x.id===v);stage.innerHTML=`<div class="v-row">${spec(d,false)}<div class="full"><div class="pg d-${d.id}">${page()}</div></div></div>`;}
+ try{localStorage.setItem("ats-dir-view",v)}catch(e){}}
+document.addEventListener("click",e=>{
+ const t=e.target.closest("[data-view]");if(t){render(t.dataset.view);return;}
+ const g=e.target.closest("[data-goto]");if(g){render(g.dataset.goto);window.scrollTo(0,0);return;}
+ const a=e.target.closest(".pg a");if(a)e.preventDefault();
+});
+window.addEventListener("resize",fit);
+let start="xr";
+render(start);document.fonts&&document.fonts.ready.then(fit);
+</script>
+</body>
+</html>

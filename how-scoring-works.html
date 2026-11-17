@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How scoring works · ATS_Breaker</title>
+<meta name="description" content="How ATS_Breaker scores a resume: the ATS match out of 100, recruiter readiness bands and the parse check. Scores are estimates of fit.">
+<meta name="theme-color" content="#0E1419">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=2">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="hdr">
+ <div class="wrap">
+  <a class="logo" href="index.html">ATS<span>_</span>Breaker</a>
+  <span class="pill">Free · no account · nothing stored</span>
+  <nav class="nav" aria-label="Site"><a href="example-report.html">Example report</a><a href="how-scoring-works.html" aria-current="page">How scoring works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a></nav>
+ </div>
+</header>
+<main id="main">
+<section class="wrap page-h" aria-labelledby="page-title">
+ <h1 id="page-title">How scoring works</h1>
+ <p class="lede">Scores are estimates of fit. They don't reproduce any employer's system.</p>
+ <div class="checks"><span class="tag">1 · Parse check: can a machine read it?</span><span class="tag">2 · Match check: which keywords are missing?</span><span class="tag">3 · Recruiter check: will a person keep reading?</span></div>
+</section>
+
+<section class="wrap sec" id="ats-match" aria-labelledby="ats-title">
+ <div class="sec-h"><h2 id="ats-title">ATS match</h2><span class="lab">Out of 100</span></div>
+ <div class="points">
+  <div class="card">
+   <div class="card-h"><b>Five parts</b></div>
+   <div class="segs" aria-hidden="true"><i style="--wt:40;--f:100%"></i><i style="--wt:10;--f:100%"></i><i style="--wt:20;--f:100%"></i><i style="--wt:10;--f:100%"></i><i style="--wt:20;--f:100%"></i></div>
+   <div class="comp"><div>Hard skills<b>40</b></div><div>Job title<b>10</b></div><div>Experience and seniority<b>20</b></div><div>Education and certifications<b>10</b></div><div>Parse quality<b>20</b></div></div>
+  </div>
+  <div class="card">
+   <div class="card-h"><b>Keywords</b></div>
+   <p>Each keyword in the job description is weighted Required or Preferred, then marked:</p>
+   <div class="legend"><span><i class="ic ok" aria-hidden="true">✓</i>Matched</span><span><i class="ic part" aria-hidden="true">◐</i>Partial</span><span><i class="ic miss" aria-hidden="true">✕</i>Missing</span></div>
+   <p>Matched means it appears in your experience. Partial means it's only in a skills list, or you name something related. Required keywords count double.</p>
+  </div>
+  <div class="card">
+   <div class="card-h"><b>Fixes</b></div>
+   <p>Every fix is ranked by its estimated gain, such as ATS +6 or Parse +4.</p>
+  </div>
+ </div>
+ <div class="points" style="margin-top:var(--gap)">
+  <div class="card"><div class="card-h"><b>Job title</b></div><p>Whether the job title, or most of its words, appears in your resume.</p></div>
+  <div class="card"><div class="card-h"><b>Experience and seniority</b></div><p>The years of dated experience we find, against the years the role asks for.</p></div>
+  <div class="card"><div class="card-h"><b>Education and certifications</b></div><p>Any degree or certification the job description names, against what your resume shows.</p></div>
+ </div>
+</section>
+
+<section class="wrap sec" id="recruiter-readiness" aria-labelledby="rec-title">
+ <div class="sec-h"><h2 id="rec-title">Recruiter readiness</h2><span class="lab">6 rubric items</span></div>
+ <div class="band" role="img" aria-label="Three bands: Needs work, Competitive, Strong" style="max-width:420px"><span>Needs work</span><span>Competitive</span><span>Strong</span></div>
+ <div class="points" style="margin-top:var(--gap)">
+  <div class="card"><div class="card-h"><b>Measurable impact</b></div><p>How many bullets show a result with a number.</p></div>
+  <div class="card"><div class="card-h"><b>Action-led bullets</b></div><p>How many bullets start with a clear verb.</p></div>
+  <div class="card"><div class="card-h"><b>Seniority fit</b></div><p>How your relevant experience compares with what the role asks for.</p></div>
+  <div class="card"><div class="card-h"><b>Concise bullets</b></div><p>How many bullets run over 35 words.</p></div>
+  <div class="card"><div class="card-h"><b>Skills shown in context</b></div><p>How many of the job's skills you mention appear in your experience, not only a skills list.</p></div>
+  <div class="card"><div class="card-h"><b>Clear sections</b></div><p>Whether you have Experience, Education and Skills headings.</p></div>
+ </div>
+ <div class="prose" style="margin-top:var(--gap)">
+  <p>Each item is rated Strong, Competitive or Needs work. Together they make a rubric score out of 100: 75 and above is <b>Strong</b>, 50 to 74 is <b>Competitive</b>, and below 50 is <b>Needs work</b>.</p>
+ </div>
+</section>
+
+<section class="wrap sec" id="parse-check" aria-labelledby="parse-title">
+ <div class="sec-h"><h2 id="parse-title">Parse check</h2><span class="lab">How an ATS reads your file</span></div>
+ <ul class="flags prose">
+  <li><i class="ic part" aria-hidden="true">◐</i><span>Two-column layouts: sidebar text gets merged into your experience.</span></li>
+  <li><i class="ic part" aria-hidden="true">◐</i><span>Contact details in the page header, which many ATSs skip.</span></li>
+  <li><i class="ic part" aria-hidden="true">◐</i><span>Text boxes and tables used to make columns.</span></li>
+  <li><i class="ic part" aria-hidden="true">◐</i><span>Missing section headings, dates or contact details.</span></li>
+  <li><i class="ic part" aria-hidden="true">◐</i><span>Scanned-image PDFs: we can only read text.</span></li>
+  <li><i class="ic ok" aria-hidden="true">✓</i><span>Dates, job titles and sections that were read correctly.</span></li>
+ </ul>
+ <p class="note"><a class="link" href="example-report.html#parse-preview">See it in the example report</a></p>
+</section>
+</main>
+<footer class="ftr">
+ <div class="wrap">
+  <span>Free · no account · nothing stored. Built by Prathamesh Shinde · <a class="link" href="https://prathameshshinde.com" rel="noopener">prathameshshinde.com</a></span>
+  <nav aria-label="Footer"><a href="how-scoring-works.html">How scoring works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a><a href="report.html">Report a wrong result</a></nav>
+ </div>
+</footer>
+</body>
+</html>

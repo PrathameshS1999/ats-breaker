@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example report · ATS_Breaker</title>
+<meta name="description" content="An example ATS_Breaker report: ATS match score, recruiter readiness, parse preview, keywords and a ranked fix list for a sample resume.">
+<meta name="theme-color" content="#0E1419">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=2">
+<script src="js/main.js?v=2" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="hdr">
+ <div class="wrap">
+  <a class="logo" href="index.html">ATS<span>_</span>Breaker</a>
+  <span class="pill">Free · no account · nothing stored</span>
+  <nav class="nav" aria-label="Site"><a href="example-report.html" aria-current="page">Example report</a><a href="how-scoring-works.html">How scoring works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a></nav>
+ </div>
+</header>
+<main id="main">
+<section class="wrap sec" aria-labelledby="results-title">
+ <p class="lab" style="margin:0 0 8px">Example report · sample-resume.pdf</p>
+ <div class="sec-h"><h1 id="results-title">Results: Site Reliability Engineer, Northwind Cloud</h1><span class="lab">Scan 2 of 2 · same job description</span></div>
+ <p class="est">Scores are estimates of fit. They don't reproduce any employer's system. <a class="link" href="how-scoring-works.html">How scoring works</a></p>
+ <div class="sum">
+  <div class="card">
+   <div class="card-h"><b>ATS match</b><a class="why" href="how-scoring-works.html#ats-match">Why 71?</a></div>
+   <div class="score"><b>71</b><span>/ 100</span></div>
+   <div class="segs" aria-hidden="true"><i style="--wt:40;--f:65%"></i><i style="--wt:10;--f:80%"></i><i style="--wt:20;--f:75%"></i><i style="--wt:10;--f:90%"></i><i style="--wt:20;--f:65%"></i></div>
+   <div class="comp"><div>Hard skills<b>26 / 40</b></div><div>Job title<b>8 / 10</b></div><div>Experience and seniority<b>15 / 20</b></div><div>Education and certifications<b>9 / 10</b></div><div>Parse quality<b>13 / 20</b></div></div>
+  </div>
+  <div class="card">
+   <div class="card-h"><b>Recruiter readiness</b><a class="why" href="how-scoring-works.html#recruiter-readiness">Why?</a></div>
+   <div class="score word"><b>Competitive</b></div>
+   <div class="band" role="img" aria-label="Band: Competitive"><span>Needs work</span><span class="on">Competitive</span><span>Strong</span></div>
+   <div class="comp"><div>Rubric score<b>64 / 100</b></div><div>Strongest<b>Action-led bullets</b></div><div>Weakest<b>Measurable impact</b></div></div>
+  </div>
+  <div class="card">
+   <div class="card-h"><b>Parse status</b><a class="why" href="#parse-preview">See ATS view</a></div>
+   <div class="status"><i class="ic part" aria-hidden="true">◐</i>2 issues to fix</div>
+   <ul class="flags"><li><i class="ic part" aria-hidden="true">◐</i><span>Two-column layout: your skills sidebar is merged into your experience.</span></li><li><i class="ic part" aria-hidden="true">◐</i><span>Contact details sit in the page header, which many ATSs skip.</span></li><li><i class="ic ok" aria-hidden="true">✓</i><span>Dates, job titles and sections were read correctly.</span></li></ul>
+  </div>
+ </div>
+ <div class="delta" aria-label="Rescan change"><span class="lab">Since your first scan</span><span class="from">58</span><span class="arrow" aria-hidden="true">→</span><span class="to">71</span><span class="up">▲ +13</span><p>4 fixes resolved. Hard skills +8, parse quality +5.</p></div>
+
+ <div class="sec-h sub"><h2 style="font-size:var(--fs-h3)">Top 3 fixes</h2><a class="link" href="#all-fixes">See all 7</a></div>
+ <ol class="fixes">
+  <li class="fix"><span class="n">1</span><div><p><b>Terraform is required and appears 4 times in the job description.</b> You list it in Skills, but no role mentions it. Add it to a bullet where you used it.</p><div class="loc"><a class="link" href="#resume-paper">Your resume: Skills, line 3</a><a class="link" href="#jd-highlighted">Job description: Required, line 2</a></div></div><span class="gain">ATS +6</span></li>
+  <li class="fix"><span class="n">2</span><div><p><b>Your contact details are in the page header.</b> Many ATSs don't read headers, so your email and phone may be lost. Move them into the body, under your name.</p><div class="loc"><a class="link" href="#resume-paper">Your resume: header</a></div></div><span class="gain">Parse +4</span></li>
+  <li class="fix"><span class="n">3</span><div><p><b>Only 2 of 14 bullets show a measurable result.</b> Add a number to your three most recent bullets: time saved, incidents reduced, or scale handled.</p><div class="loc"><a class="link" href="#resume-paper">Your resume: Experience, role 1</a></div></div><span class="gain">Recruiter: impact</span></li>
+ </ol>
+</section>
+
+<section class="wrap sec" id="parse-preview" aria-labelledby="parse-title">
+ <div class="sec-h"><h2 id="parse-title">Parse preview</h2><span class="lab">How an ATS reads your file</span></div>
+ <div class="parse">
+  <div class="pane" id="resume-paper">
+   <div class="pane-h"><b>Your resume</b><span class="lab">sample-resume.pdf · page 1</span></div>
+   <div class="paper" role="img" aria-label="Page 1 of the sample resume, with the header and the skills column flagged">
+    <div class="hd flagbox" data-flag="HEADER"><b>Aoife Byrne</b>aoife.byrne@email.ie · +353 87 000 0000 · Dublin</div>
+    <div class="side flagbox" data-flag="COLUMN"><div><p class="ph">SKILLS</p><p>Kubernetes (K8s) · Terraform · GitLab CI · Prometheus · Python · Linux</p></div><div><p class="ph">CERTIFICATIONS</p><p>AWS Solutions Architect – Associate</p></div></div>
+    <div><p class="ph">EXPERIENCE</p><p><b>Junior DevOps Engineer</b>, Harbour Analytics · 2023–now</p><p>• Built deployment pipelines in GitLab CI for 12 services.</p><p>• Ran K8s clusters for staging and production.</p><p>• Set up Prometheus alerts for the payments team.</p><p class="ph mt">EDUCATION</p><p>MSc Cloud Computing · 2023</p></div>
+   </div>
+  </div>
+  <div class="pane">
+   <div class="pane-h"><b>ATS view</b><span class="lab">extracted text · 5 sections</span></div>
+<pre class="xray"><span class="gone">[header not extracted]</span>
+<span class="sec-t">EXPERIENCE</span>
+<span class="bad">SKILLS Kubernetes (K8s) · Terraform ·</span> Junior DevOps
+<span class="bad">GitLab CI · Prometheus · Python</span> Engineer,
+Harbour Analytics 2023–now
+• Built deployment pipelines in GitLab CI
+  for 12 services.
+<span class="bad">CERTIFICATIONS AWS Solutions</span> • Ran K8s
+clusters for staging and production.
+• Set up Prometheus alerts for the
+  payments team.
+<span class="sec-t">EDUCATION</span>
+MSc Cloud Computing 2023
+<span class="sec-t">CONTACT</span>  <span class="gone">— not found</span></pre>
+  </div>
+ </div>
+ <div class="parse-flags">
+  <div class="pf"><i class="ic part" aria-hidden="true">◐</i><div><b>Two columns</b><p>Your sidebar text is read in the middle of your job title, so "Junior DevOps Engineer" is split in two. Use a single column.</p></div></div>
+  <div class="pf"><i class="ic part" aria-hidden="true">◐</i><div><b>Contact details in the header</b><p>Your name, email and phone weren't extracted. Put them in the first lines of the page body.</p></div></div>
+ </div>
+</section>
+
+<section class="wrap sec" id="keywords" aria-labelledby="kw-title">
+ <div class="sec-h"><h2 id="kw-title">Keywords</h2><span class="lab">15 found in the job description</span></div>
+ <div class="kw-tools" role="group" aria-label="Filter keywords">
+  <button type="button" class="ft" data-filter="all" aria-pressed="true">All 15</button>
+  <button type="button" class="ft" data-filter="ok" aria-pressed="false">Matched 8</button>
+  <button type="button" class="ft" data-filter="part" aria-pressed="false">Partial 3</button>
+  <button type="button" class="ft" data-filter="miss" aria-pressed="false">Missing 4</button>
+  <button type="button" class="ft" data-filter="req" aria-pressed="false">Required only</button>
+ </div>
+ <div class="kw">
+  <div class="table-scroll" tabindex="0" role="region" aria-label="Keywords table">
+   <table class="kwt"><thead><tr><th scope="col">Keyword</th><th scope="col">Weight</th><th scope="col">Status</th><th scope="col">Where it appears</th></tr></thead><tbody>
+    <tr data-status="ok" data-weight="req"><td class="w">Kubernetes</td><td>Required</td><td><span class="status"><i class="ic ok" aria-hidden="true">✓</i>Matched</span></td><td>As "K8s", in 1 bullet<small>Backed by experience</small></td></tr>
+    <tr data-status="part" data-weight="req"><td class="w">Terraform</td><td>Required</td><td><span class="status"><i class="ic part" aria-hidden="true">◐</i>Partial</span></td><td>Skills list only<small>No bullet shows it used</small></td></tr>
+    <tr data-status="part" data-weight="req"><td class="w">CI/CD</td><td>Required</td><td><span class="status"><i class="ic part" aria-hidden="true">◐</i>Partial</span></td><td>Related: "GitLab CI"<small>Counts toward CI/CD</small></td></tr>
+    <tr data-status="ok" data-weight="req"><td class="w">Prometheus</td><td>Required</td><td><span class="status"><i class="ic ok" aria-hidden="true">✓</i>Matched</span></td><td>Skills and 1 bullet</td></tr>
+    <tr data-status="miss" data-weight="req"><td class="w">Incident response</td><td>Required</td><td><span class="status"><i class="ic miss" aria-hidden="true">✕</i>Missing</span></td><td>Not found</td></tr>
+    <tr data-status="miss" data-weight="pref"><td class="w">SLOs</td><td>Preferred</td><td><span class="status"><i class="ic miss" aria-hidden="true">✕</i>Missing</span></td><td>Not found</td></tr>
+   </tbody></table>
+  </div>
+  <div class="jdhl" id="jd-highlighted"><span class="lab">Job description, highlighted</span>
+   <p>Required: 2+ years running production on <span class="hl-ok">Kubernetes</span>, <span class="hl-part">Terraform</span>, <span class="hl-part">CI/CD</span> pipelines, <span class="hl-ok">Prometheus</span> and <span class="hl-ok">Grafana</span>, <span class="hl-ok">Python</span>, and on-call <span class="hl-miss">incident response</span>. Preferred: <span class="hl-miss">SLOs</span> and error budgets, <span class="hl-miss">Go</span>, <span class="hl-ok">AWS</span>.</p>
+   <div class="legend"><span><i class="ic ok" aria-hidden="true">✓</i>Matched</span><span><i class="ic part" aria-hidden="true">◐</i>Partial</span><span><i class="ic miss" aria-hidden="true">✕</i>Missing</span></div>
+  </div>
+ </div>
+</section>
+
+<section class="wrap sec" aria-labelledby="rub-title">
+ <div class="sec-h"><h2 id="rub-title">Recruiter review</h2><span class="lab">6 rubric items · published on How scoring works</span></div>
+ <div class="rub">
+  <div class="card"><div class="card-h"><b>Measurable impact</b><span class="bl weak"><i class="ic miss" aria-hidden="true">✕</i>Needs work</span></div><p>2 of 14 bullets show a result with a number.</p><blockquote>"Ran K8s clusters for staging and production."</blockquote></div>
+  <div class="card"><div class="card-h"><b>Action-led bullets</b><span class="bl strong"><i class="ic ok" aria-hidden="true">✓</i>Strong</span></div><p>13 of 14 bullets start with a clear verb.</p><blockquote>"Built deployment pipelines in GitLab CI for 12 services."</blockquote></div>
+  <div class="card"><div class="card-h"><b>Seniority fit</b><span class="bl comp"><i class="ic part" aria-hidden="true">◐</i>Competitive</span></div><p>The role asks for 2+ years. Your relevant experience totals about 2 years.</p><blockquote>"Junior DevOps Engineer, 2023–now"</blockquote></div>
+ </div>
+</section>
+
+<section class="wrap sec" id="all-fixes" aria-labelledby="fixes-title">
+ <div class="sec-h"><h2 id="fixes-title">All fixes, ranked by estimated gain</h2><span class="lab">Tick them off as you go · this session only</span></div>
+ <ul class="fixes" id="all-fixes-list">
+  <li class="fix done"><input class="chk" type="checkbox" id="fix-1" name="fixes_done" value="fix-1" data-fix="fix-1" checked aria-label="Done: move your contact details out of the page header"><div><p>Move your contact details out of the page header.</p><div class="loc"><span>Resolved on rescan</span></div></div><span class="gain">Parse +4</span></li>
+  <li class="fix"><input class="chk" type="checkbox" id="fix-2" name="fixes_done" value="fix-2" data-fix="fix-2" aria-label="Done: add Terraform to a bullet where you used it"><div><p><b>Add Terraform to a bullet where you used it.</b> It's required and only appears in your Skills list.</p><div class="loc"><a class="link" href="#resume-paper">Skills, line 3</a></div></div><span class="gain">ATS +6</span></li>
+  <li class="fix"><input class="chk" type="checkbox" id="fix-3" name="fixes_done" value="fix-3" data-fix="fix-3" aria-label="Done: show on-call or incident work"><div><p><b>Show on-call or incident work.</b> "Incident response" is required. If you've handled alerts or outages, say so in a bullet.</p><div class="loc"><a class="link" href="#jd-highlighted">Job description: Required</a></div></div><span class="gain">ATS +5</span></li>
+ </ul>
+ <div class="acts">
+  <a class="btn btn-p" href="index.html#scan">Rescan with edited resume</a>
+  <a class="btn btn-s" href="index.html#job_description">Swap job description</a>
+  <button type="button" class="btn btn-s" data-print>Download report (PDF)</button>
+  <button type="button" class="btn btn-s" data-copy="#all-fixes-list">Copy fix list</button>
+ </div>
+ <p class="visually-hidden" role="status" data-copy-status></p>
+ <!-- Feedback form. Remove data-no-handler once a handler is wired up. -->
+ <form class="fb" name="feedback" method="post" data-no-handler
+   data-pending-msg="Feedback isn't connected yet, so nothing was sent."
+   data-success-msg="Thanks for the feedback."
+   data-error-msg="That didn't send. Check your connection and try again.">
+  <span id="fb-q">Was this result accurate?</span>
+  <input type="hidden" name="report" value="example">
+  <button class="btn btn-s btn-sm" type="submit" name="accurate" value="yes" aria-describedby="fb-q">Yes</button>
+  <a class="btn btn-s btn-sm" href="report.html">No, report it</a>
+ </form>
+ <div class="form-msg" data-form-msg data-for="feedback" role="status" hidden></div>
+</section>
+</main>
+<footer class="ftr">
+ <div class="wrap">
+  <span>Free · no account · nothing stored. Built by Prathamesh Shinde · <a class="link" href="https://prathameshshinde.com" rel="noopener">prathameshshinde.com</a></span>
+  <nav aria-label="Footer"><a href="how-scoring-works.html">How scoring works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a><a href="report.html">Report a wrong result</a></nav>
+ </div>
+</footer>
+</body>
+</html>

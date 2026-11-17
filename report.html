@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report a wrong result · ATS_Breaker</title>
+<meta name="description" content="Tell us when an ATS_Breaker score or check looks wrong.">
+<meta name="theme-color" content="#0E1419">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=2">
+<script src="js/main.js?v=2" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="hdr">
+ <div class="wrap">
+  <a class="logo" href="index.html">ATS<span>_</span>Breaker</a>
+  <span class="pill">Free · no account · nothing stored</span>
+  <nav class="nav" aria-label="Site"><a href="example-report.html">Example report</a><a href="how-scoring-works.html">How scoring works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a></nav>
+ </div>
+</header>
+<main id="main">
+<section class="wrap page-h" aria-labelledby="page-title">
+ <h1 id="page-title">Report a wrong result</h1>
+ <p class="lede">Scores are estimates of fit. If one looks wrong, tell us which check and what it got wrong.</p>
+</section>
+
+<section class="wrap sec" aria-label="Report form">
+ <!-- Report form. Remove data-no-handler once a handler is wired up. -->
+ <form class="form-card" name="report" method="post" data-no-handler
+   data-pending-msg="Reports aren't connected yet, so nothing was sent. Your text is still here."
+   data-success-msg="Thanks. Your report was sent."
+   data-error-msg="That didn't send. Check your connection and try again. Your text is still here."
+   data-reset-on-success>
+  <div class="field">
+   <label for="check">Which check was wrong?</label>
+   <select id="check" name="check" required aria-describedby="check-err">
+    <option value="">Choose a check</option>
+    <option value="parse">Parse check: can a machine read it?</option>
+    <option value="match">Match check: which keywords are missing?</option>
+    <option value="recruiter">Recruiter check: will a person keep reading?</option>
+   </select>
+   <p class="field-err" id="check-err" hidden></p>
+  </div>
+  <div class="field">
+   <label for="details">What did it get wrong?</label>
+   <span class="hint" id="details-hint">Please don't paste your whole resume.</span>
+   <textarea id="details" name="details" required aria-describedby="details-hint details-err"></textarea>
+   <p class="field-err" id="details-err" hidden></p>
+  </div>
+  <div class="go"><button class="btn btn-p" type="submit">Send report</button></div>
+  <div class="form-msg" data-form-msg role="status" hidden></div>
+ </form>
+</section>
+</main>
+<footer class="ftr">
+ <div class="wrap">
+  <span>Free · no account · nothing stored. Built by Prathamesh Shinde · <a class="link" href="https://prathameshshinde.com" rel="noopener">prathameshshinde.com</a></span>
+  <nav aria-label="Footer"><a href="how-scoring-works.html">How scoring works</a><a href="privacy.html">Privacy</a><a href="about.html">About</a><a href="report.html">Report a wrong result</a></nav>
+ </div>
+</footer>
+</body>
+</html>
