@@ -271,10 +271,18 @@
       steps(["done", "now", "wait"]);
       await frame();
       var jd = ATS.analyseJD(jdText);
+      // Optional smart matching: never blocks a scan; if it can't load, standard matching is used.
+      var smart = null, smartFailed = false;
+      if (form.smart_matching && form.smart_matching.checked && ATS.smartMatch) {
+        var lab = $("[data-scanning] .lab");
+        if (!ATS.smartReady()) lab.textContent = "Scanning · loading smart matching";
+        try { smart = await ATS.smartMatch(jd, model); } catch (err) { smartFailed = true; }
+        lab.textContent = "Scanning";
+      }
       if (token.cancelled) return;
       steps(["done", "done", "now"]);
       await frame();
-      var r = ATS.score(model, jd, jdText, store.get());
+      var r = ATS.score(model, jd, jdText, store.get(), smart);
       if (token.cancelled) return;
       store.set(r.snapshot);
       steps(["done", "done", "done"]);
@@ -287,7 +295,8 @@
       if (fb && ATS.bindForm) ATS.bindForm(fb);
       if (ATS.restoreFixes) ATS.restoreFixes(root);
       drawPdf(model, root);
-      ui.say("ok", "Scan complete. Your results are below.");
+      if (smartFailed) ui.say("part", "Scan complete, but smart matching couldn't load, so this scan used standard matching. Your results are below.");
+      else ui.say("ok", "Scan complete" + (smart ? " with smart matching" : "") + ". Your results are below.");
       var head = $("#results-title");
       head.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
       head.focus({ preventScroll: true });
@@ -323,6 +332,36 @@
     current = null;
     return true;
   };
+
+  /* Smart matching switch: remember the choice (this browser only) and start the
+     model download as soon as it's ticked, so a scan doesn't wait for it. */
+  var smartBox = document.getElementById("smart_matching");
+  var smartStatus = $("[data-smart-status]");
+  if (smartBox && ATS.smartWarm) {
+    var KEY = "ats-smart-matching";
+    var warm = function () {
+      if (ATS.smartReady()) { smartStatus.textContent = "Smart matching is ready."; smartStatus.hidden = false; return; }
+      smartStatus.textContent = "Downloading the model…";
+      smartStatus.hidden = false;
+      ATS.smartWarm(function (p) {
+        if (p && p.status === "progress" && /\.onnx$/.test(p.file || "") && p.progress) {
+          smartStatus.textContent = "Downloading the model… " + Math.round(p.progress) + "%";
+        }
+      }).then(function () {
+        smartStatus.textContent = "Smart matching is ready.";
+      }, function () {
+        smartStatus.textContent = "Couldn't download the model. Scans will use standard matching.";
+      });
+    };
+    smartBox.addEventListener("change", function () {
+      try { localStorage.setItem(KEY, smartBox.checked ? "1" : "0"); } catch (e) { /* storage blocked */ }
+      if (smartBox.checked) warm();
+      else smartStatus.hidden = true;
+    });
+    var saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) { /* storage blocked */ }
+    if (saved === "1") { smartBox.checked = true; warm(); }
+  }
 
   /* Live "We detected" row under the job description */
   var jdBox = document.getElementById("job_description");

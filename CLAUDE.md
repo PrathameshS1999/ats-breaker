@@ -60,6 +60,14 @@ Loaded on `index.html` only, in this order:
   experience 20, education/certs 10, parse 20; six rubric items rated Strong 100 /
   Competitive 60 / Needs work 20, averaged: ≥75 Strong, 50–74 Competitive; fixes ranked
   by estimated gain). Keep `how-scoring-works.html` in step with any change here.
+- `js/scan-smart.js` — optional "Smart matching" (off by default; switch on the form,
+  choice kept in localStorage). Loads Transformers.js 3.8.1 from jsDelivr and the
+  `Xenova/bge-small-en-v1.5` model (~35 MB, cached) from Hugging Face via dynamic
+  `import()`, only when ticked. Queries with each keyword's job-description line,
+  each resume line may support only its best keyword, role-header lines are skipped,
+  threshold `ATS.smartThreshold = 0.62` (calibrated; see comment). Smart matches give
+  Partial only and a "Use the words …" fix. If loading fails, the scan falls back to
+  standard matching and says so.
 - `js/scan-ui.js` — runs the scan with the scanning steps, renders results using the
   same components as the example report, live "We detected" row, rescan comparison.
 - `js/vendor/pdfjs/` — pdf.js 3.11.174 (Apache-2.0), verified against cdnjs SRI hashes.

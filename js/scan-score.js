@@ -188,9 +188,20 @@
       seen[t.term.toLowerCase()] = 1;
       found.push({ t: t, names: names, hits: hits });
     });
+    // Ignore words in the company name on the title line ("Operations Manager – Northfield Logistics")
+    // (only the stretch right after the title, up to the first line break, full stop or bracket)
+    var titleEnd = title ? text.indexOf(title.title) + title.title.length : -1;
+    var nameEnd = -1;
+    if (titleEnd > 0) {
+      var rest = text.slice(titleEnd);
+      var stop = rest.search(/\n|\.\s|[!?(]/);
+      nameEnd = titleEnd + (stop < 0 ? Math.min(rest.length, 80) : Math.min(stop, 80));
+    }
+    var inCompanyName = function (h) { return nameEnd > 0 && h.start >= titleEnd && h.start < nameEnd; };
     // Drop hits that sit inside a longer known term (e.g. "AWS" inside "AWS Certified Solutions Architect")
     found.forEach(function (f) {
       f.hits = f.hits.filter(function (h) {
+        if (inCompanyName(h)) return false;
         return !found.some(function (o) {
           return o !== f && o.hits.some(function (g) { return g.start <= h.start && g.end >= h.end && (g.end - g.start) > (h.end - h.start); });
         });
@@ -263,6 +274,16 @@
       return (a.weight === b.weight ? 0 : a.weight === "req" ? -1 : 1) || a.firstAt - b.firstAt;
     });
     kws = kws.slice(0, 30);
+    // The job-description line each keyword came from (used by smart matching for context)
+    kws.forEach(function (k) {
+      var ls = text.lastIndexOf("\n", k.firstAt - 1) + 1, le = text.indexOf("\n", k.firstAt);
+      var line = text.slice(ls, le < 0 ? text.length : le).replace(/^\s*[-•*●▪]\s*/, "").trim();
+      if (line.length > 160) {
+        var at = k.firstAt - ls;
+        line = text.slice(Math.max(ls, ls + at - 70), Math.min(le < 0 ? text.length : le, ls + at + 90)).trim();
+      }
+      k.context = line;
+    });
 
     var level = detectLevel(title && title.title, text, years);
     return {
@@ -454,7 +475,8 @@
     return (h >>> 0).toString(36);
   }
 
-  ATS.score = function (model, jd, jdText, prev) {
+  // smart (optional): { term: { score, text } } from scan-smart.js
+  ATS.score = function (model, jd, jdText, prev, smart) {
     var st = structure(model);
     var all = st.lines.map(function (l) { return l.text; }).join("\n");
     var bodyText = st.lines.filter(function (l) { return l.section !== "skills" && l.section !== "certifications"; })
@@ -476,7 +498,7 @@
         });
       });
       st.bullets.forEach(function (b) { if (k.names.some(function (n) { return has(b.text, n); })) inBullets++; });
-      var status, where, note = "", related = null;
+      var status, where, note = "", related = null, smartLine = null;
       if (inBody || (k.cert && inSkills) || (noSections && inSkills)) {
         status = "ok";
         if (k.cert && inCerts) where = (alias ? 'As "' + alias + '", in ' : "In ") + "Certifications";
@@ -495,13 +517,19 @@
           if (hit) { related = hit.text; return true; }
           return false;
         });
+        var sm = smart && smart[k.term];
         if (related) { status = "part"; where = 'Related: "' + related + '"'; note = "Counts toward " + k.term; }
+        else if (sm && !k.cert && sm.score >= ATS.smartThreshold) {
+          // Smart matching: a line says the same thing in other words. Partial credit only.
+          status = "part"; smartLine = sm.text;
+          where = 'Similar: "' + clip(sm.text, 70) + '"'; note = "Smart match · check it's the same skill";
+        }
         else { status = "miss"; where = "Not found"; }
       }
       var w = k.weight === "req" ? 2 : 1;
       return { term: k.term, names: k.names, weight: k.weight, count: k.count, status: status, where: where, note: note,
         related: related, cert: k.cert, w: w, inBullets: inBullets, certOnly: inSkills > 0 && inCerts === inSkills,
-        group: k.group };
+        group: k.group, smartLine: smartLine };
     });
     // Either/or: when the job accepts any one of several ("ACCA or CIMA") and you have one, the others are covered.
     keywords.forEach(function (k) {
@@ -640,7 +668,7 @@
       quote: long.length ? clip(long[0], 140) : "" }
       : { key: "length", name: "Concise bullets", level: "comp", text: "We couldn't find any bullet points to check.", quote: "" });
 
-    var listed = keywords.filter(function (k) { return !k.cert && !k.covered && (k.status === "ok" || (k.status === "part" && !k.related)); });
+    var listed = keywords.filter(function (k) { return !k.cert && !k.covered && !k.smartLine && (k.status === "ok" || (k.status === "part" && !k.related)); });
     var backed = listed.filter(function (k) { return k.status === "ok"; });
     rub.push(listed.length ? { key: "context", name: "Skills shown in context", level: level(backed.length / listed.length, 0.7, 0.4),
       text: backed.length + " of " + plural(listed.length, "skill") + " from the job description that you mention appear in your experience, not only a skills list.", quote: "" }
@@ -672,6 +700,9 @@
       var html;
       if (k.cert) {
         html = "<b>Add " + esc(k.term) + " if you hold it.</b> It's " + word + " in the job description and wasn't found in your resume. List it under Certifications.";
+      } else if (k.smartLine) {
+        html = "<b>Use the words \"" + esc(k.term) + "\".</b> It's " + word + " in the job description, and your line \"" + esc(clip(k.smartLine, 90)) +
+          "\" looks like the same skill. An ATS search needs the exact words, so name it if it fits.";
       } else if (k.status === "part" && !k.related) {
         html = "<b>" + esc(cap(k.term)) + " is " + word + " and appears " + times + " in the job description.</b> You list it " +
           (k.certOnly ? "under Certifications" : "in Skills") + ", but no role mentions it. Add it to a bullet where you used it.";
@@ -681,7 +712,7 @@
         html = "<b>Show " + esc(k.term) + " if you have it.</b> \"" + esc(k.term) + "\" is " + word + " and wasn't found in your resume. If you've used it, say so in a bullet.";
       }
       fixes.push({ id: "kw-" + slug(k.term), html: html, gain: "ATS +" + gain, rank: gain,
-        loc: (k.status === "part" && !k.related ? [["Your resume: Skills", "#resume-paper"]] : [])
+        loc: (k.status === "part" && !k.related && !k.smartLine ? [["Your resume: Skills", "#resume-paper"]] : k.smartLine ? [["Your resume", "#resume-paper"]] : [])
           .concat([["Job description: " + (k.weight === "req" ? "Required" : "Preferred"), "#jd-highlighted"]]) });
     });
     if (jd.title && titleScore <= 8) {
