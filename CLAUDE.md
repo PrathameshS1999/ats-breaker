@@ -40,15 +40,23 @@ changes, or returning visitors may run old JS against new HTML.
 
 ## The scan (runs entirely in the browser; nothing is uploaded)
 Loaded on `index.html` only, in this order:
-- `js/scan-keywords.js` — known skills/tools/certs (`"Canonical|alias"`, `!` = cert),
-  related-term credit (e.g. GitLab CI → CI/CD) and case-sensitive short words (Go, R).
+- `js/scan-keywords.js` — ~1,100 known skills/tools/certs across industries
+  (`"Canonical|alias"`, `!` = cert), related-term credit (GitLab CI → CI/CD, Xero →
+  accounting), `CASE_SENSITIVE` words, and `AMBIGUOUS` words (Go, R, C, Lean, Swift,
+  spoken languages…) that only count in a list or next to context words (`CONTEXT`).
+  Short all-caps acronyms (SEO, CRM, QA) automatically match in capitals only.
 - `js/scan-read.js` — `ATS.readResume(file, text)`: PDF via pdf.js (lazy-loaded),
   DOCX via a small built-in unzip + `DecompressionStream`, or pasted text. Detects
   two-column PDFs (a gutter nothing crosses), DOCX headers with contact details, table
   layouts, text boxes. Builds the "ATS view" (lines read straight across). Errors:
   `scanned` (shows the design's scanned-image panel), `encrypted`, `unreadable`, `nodocx`.
-- `js/scan-score.js` — `ATS.analyseJD` (title, level, years, degree, keywords with
-  Required/Preferred from section markers) and `ATS.score` (hard skills 40, job title 10,
+- `js/scan-score.js` — `ATS.analyseJD` (title, level, years incl. "three years", degree,
+  keywords; Required/Preferred from headings in `HEADINGS` incl. Markdown/bold, and
+  overridden by in-sentence phrases like "is a plus", "ideally", "must"; either/or groups
+  like "ACCA or CIMA" where one covers the rest). Dates: many formats (`parseDate`,
+  "2019–21", "06/2020", "Summer 2021", "Q3 2022", "since 2019"), role durations
+  ("(3 years)") and a stated "N years of experience" fallback.
+  `ATS.score` (hard skills 40, job title 10,
   experience 20, education/certs 10, parse 20; six rubric items rated Strong 100 /
   Competitive 60 / Needs work 20, averaged: ≥75 Strong, 50–74 Competitive; fixes ranked
   by estimated gain). Keep `how-scoring-works.html` in step with any change here.

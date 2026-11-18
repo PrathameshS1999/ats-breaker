@@ -11,8 +11,11 @@
   /* ------------------------------------------------------------- matching */
   function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
+  // Short all-caps acronyms (SEO, CRM, IAM, QA, S3…) only count in capitals.
+  function isAcronym(name) { return /^[A-Z0-9][A-Z0-9&/+#.\-]{1,5}$/.test(name) && /[A-Z]/.test(name); }
+
   function nameRe(name) {
-    var cs = !!ATS.caseSensitive[name];
+    var cs = !!ATS.caseSensitive[name] || isAcronym(name);
     var p = escapeRe(name).replace(/-|\s+/g, "[\\s-]?");
     if (/[a-z]$/i.test(name) && name.length > 2) p += "(?:s|es)?";
     return new RegExp("(^|[^A-Za-z0-9+#&@])(" + p + ")(?![A-Za-z0-9+#&])", cs ? "g" : "gi");
@@ -20,11 +23,29 @@
   var reCache = {};
   function re(name) { return reCache[name] || (reCache[name] = nameRe(name)); }
 
+  // Ambiguous words (Go, R, Lean, Swift…) count only in a list or next to related words.
+  var LIST_BEFORE = /[,/|(•·:;+&]\s*$|\band\s*$|\bor\s*$/i;
+  var LIST_AFTER = /^\s*[,/|);+&]|^\s+(and|or)\s+[A-Z]/;
+  function inContext(text, hit, kind) {
+    var ls = text.lastIndexOf("\n", hit.start - 1) + 1;
+    var le = text.indexOf("\n", hit.end);
+    if (le < 0) le = text.length;
+    var before = text.slice(ls, hit.start), after = text.slice(hit.end, le);
+    if (/^[-–]/.test(after)) return false;          // "Go-to-market", "Go-live", "R-squared"
+    // Alone on its line, or the only thing on a bullet line ("- Rust"): a list item
+    if (/^\s*(?:[-•*●▪·]\s*)?$/.test(before) && /^\s*[.,;]?\s*$/.test(after)) return true;
+    if (LIST_BEFORE.test(before) || LIST_AFTER.test(after)) return true;
+    var ctx = ATS.context[kind];
+    return !!ctx && ctx.test(before + " " + after);
+  }
+
   function findAll(text, name) {
     var r = re(name), out = [], m;
+    var amb = ATS.ambiguous && ATS.ambiguous[name];
     r.lastIndex = 0;
     while ((m = r.exec(text))) {
-      out.push({ start: m.index + m[1].length, end: m.index + m[1].length + m[2].length, text: m[2] });
+      var hit = { start: m.index + m[1].length, end: m.index + m[1].length + m[2].length, text: m[2] };
+      if (!amb || inContext(text, hit, amb)) out.push(hit);
       if (m[0].length === 0) r.lastIndex++;
     }
     return out;
@@ -32,9 +53,20 @@
   function has(text, name) { return findAll(text, name).length > 0; }
 
   /* ------------------------------------------------------ job description */
-  var MARKER_RE = /(^|\n|[.;]\s+)\s*(?:[-•*]\s*)?(required|requirements|minimum qualifications|must[- ]haves?|essential(?: skills| criteria)?|what you(?:'|’)ll need|you(?:'|’)ll need|you will need|qualifications|you have|about you|skills|preferred(?: qualifications)?|nice[- ]to[- ]haves?|bonus(?: points)?|desirable|good to have|responsibilities|what you(?:'|’)ll do|the role|about (?:us|the company|the role)|benefits|what we offer|perks)\s*(?::|\n|—|–)/gi;
-  var PREF_RE = /preferred|nice|bonus|desirable|good to have/i;
-  var REQ_RE = /required|requirement|must|essential|need|qualification|you have|about you|skills/i;
+  // Section headings in a job description, and what they mean for keyword weight.
+  var A = "(?:'|’)";
+  var HEADINGS = [
+    ["pref", "preferred(?: qualifications| skills| experience| requirements)?|nice[- ]to[- ]haves?|bonus(?: points)?|bonus if you(?: have)?|desirable(?: skills| criteria| requirements)?|good to have|great to have|it" + A + "s a plus|pluses|plus|even better|extra credit|optional|additional (?:skills|qualifications)|would be (?:great|nice|a plus)"],
+    ["other", "(?:key |main |core )?responsibilities|(?:key |main )?duties|what you" + A + "ll do|what you will do|what you" + A + "ll be doing|day[- ]to[- ]day|in this role|the role|about the role|role overview|overview|job summary|about (?:us|the company|the team)|who we are|our team|benefits|what we offer|perks|compensation|salary|how to apply|equal opportunit\\w*|our values|why join us|why us"],
+    ["req", "required(?: skills| qualifications| experience)?|requirements|minimum (?:requirements|qualifications)|basic qualifications|must[- ]haves?|essential(?: skills| criteria| requirements)?|key (?:skills|requirements)|what you" + A + "ll need|you" + A + "ll need|you will need|what we" + A + "re looking for|what we are looking for|who you are|about you|your profile|your skills|your experience|(?:the )?ideal candidate|you have|you bring|what you" + A + "ll bring|what you bring|you" + A + "ll bring|qualifications|skills(?: and experience| & experience| required)?|experience(?: required)?|person specification|candidate requirements|technical skills|competencies"]
+  ];
+  var MARKER_RE = new RegExp("(^|\\n|[.;]\\s+)[ \\t]*(?:[-•*#>]+[ \\t]*)?(?:\\*\\*|__)?(" +
+    HEADINGS.map(function (h) { return h[1]; }).join("|") + ")(?:\\*\\*|__)?[ \\t]*(?::|\\n|—|–|$)", "gi");
+  var HEADING_KIND = HEADINGS.map(function (h) { return [new RegExp("^(?:" + h[1] + ")$", "i"), h[0]]; });
+
+  // Phrases inside a sentence that change a keyword's weight ("Go is a plus", "ideally Kafka").
+  var INLINE_PREF = /\b(?:a (?:big |huge |strong |real )?(?:plus|bonus|advantage)|is a plus|are a plus|nice[- ]to[- ]have|desirable|preferred|preferably|ideally|advantageous|beneficial|would be (?:great|nice|helpful|useful|a plus)|is welcome|are welcome|bonus|not (?:required|essential|necessary|mandatory))\b/i;
+  var INLINE_REQ = /\b(?:must|required|essential|mandatory|need(?:s)? to have|you have|minimum of|at least|proven|demonstrable|strong (?:experience|knowledge|background))\b/i;
 
   var STOP = ("a an the and or of in on at to for with as by from into via using use is are be been being you your our we will " +
     "can able ability strong excellent good great solid proven deep broad demonstrated hands-on handson working work " +
@@ -68,10 +100,11 @@
     return null;
   }
 
+  var NUM_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twelve: 12, fifteen: 15 };
   function detectYears(text) {
-    var r = /(\d{1,2})\s*\+?\s*(?:(?:-|–|to)\s*\d{1,2}\s*)?(?:years?|yrs?)\b/gi, m;
+    var r = /(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|twelve|fifteen)\s*\+?\s*(?:\(\d{1,2}\)\s*)?(?:(?:-|–|to)\s*\d{1,2}\s*)?(?:years?|yrs?)\b/gi, m;
     while ((m = r.exec(text))) {
-      var n = parseInt(m[1], 10);
+      var n = /\d/.test(m[1]) ? parseInt(m[1], 10) : NUM_WORDS[m[1].toLowerCase()];
       if (n > 0 && n <= 20) return n;
     }
     return null;
@@ -92,11 +125,29 @@
     var marks = [], m;
     MARKER_RE.lastIndex = 0;
     while ((m = MARKER_RE.exec(text))) {
-      var word = m[2];
-      var kind = PREF_RE.test(word) ? "pref" : REQ_RE.test(word) ? "req" : "other";
+      var word = m[2].trim(), kind = "req";
+      for (var i = 0; i < HEADING_KIND.length; i++) { if (HEADING_KIND[i][0].test(word)) { kind = HEADING_KIND[i][1]; break; } }
       marks.push({ at: m.index + m[1].length, kind: kind });
     }
     return marks;
+  }
+
+  // The weight a sentence gives a keyword on its own, or null if it doesn't say.
+  function inlineWeight(text, pos) {
+    var s = Math.max(text.lastIndexOf("\n", pos - 1), text.lastIndexOf(". ", pos - 1), text.lastIndexOf(";", pos - 1)) + 1;
+    var ends = [text.indexOf("\n", pos), text.indexOf(". ", pos), text.indexOf(";", pos)].filter(function (x) { return x >= 0; });
+    var e = ends.length ? Math.min.apply(null, ends) : text.length;
+    var sentence = text.slice(s, e);
+    var pref = INLINE_PREF.test(sentence), req = INLINE_REQ.test(sentence);
+    if (pref && req) {
+      // Both in one sentence ("Python required, Go a plus"): look only at this keyword's clause
+      var cs = text.lastIndexOf(",", pos - 1);
+      var ce = text.indexOf(",", pos);
+      var clause = text.slice(Math.max(s, cs + 1), ce >= 0 && ce < e ? ce : e);
+      pref = INLINE_PREF.test(clause); req = INLINE_REQ.test(clause);
+      if (pref === req) return null;
+    }
+    return pref ? "pref" : req ? "req" : null;
   }
   function regionAt(marks, pos) {
     var kind = marks.length ? "other" : "req";
@@ -119,7 +170,8 @@
     var kws = [], seen = {};
 
     var place = function (kw, positions) {
-      var kinds = positions.map(function (p) { return regionAt(marks, p); });
+      // A sentence that says "a plus" or "must" wins over the section heading it sits under
+      var kinds = positions.map(function (p) { return inlineWeight(text, p) || regionAt(marks, p); });
       if (kinds.indexOf("req") >= 0) kw.weight = "req";
       else if (kinds.indexOf("pref") >= 0) kw.weight = "pref";
       else kw.weight = "req";
@@ -146,7 +198,7 @@
     });
     found.forEach(function (f) {
       if (!f.hits.length) return;
-      var kw = { term: f.t.term, names: f.names, cert: f.t.cert, count: f.hits.length, generic: false };
+      var kw = { term: f.t.term, names: f.names, cert: f.t.cert, count: f.hits.length, generic: false, hits: f.hits };
       place(kw, f.hits.map(function (h) { return h.start; }));
       kws.push(kw);
     });
@@ -182,12 +234,30 @@
         var hits = findAll(text, phrase);
         if (!hits.length) return;
         seen[key] = 1;
-        var kw = { term: phrase, names: [phrase], cert: false, count: hits.length, generic: true };
+        var kw = { term: phrase, names: [phrase], cert: false, count: hits.length, generic: true, hits: hits };
         place(kw, hits.map(function (h) { return h.start; }));
         kws.push(kw);
         generic++;
       });
     });
+
+    // Either/or requirements ("ACCA or CIMA", "Xero/Sage", "Python, Go or Rust"): any one is enough.
+    var all = [];
+    kws.forEach(function (k, ki) { k.hits.forEach(function (h) { all.push({ k: ki, s: h.start, e: h.end }); }); });
+    all.sort(function (a, b) { return a.s - b.s; });
+    var group = kws.map(function (_, i) { return i; });
+    var root = function (i) { while (group[i] !== i) i = group[i] = group[group[i]]; return i; };
+    for (var i = 0; i < all.length; i++) {
+      var chain = [all[i]], hasOr = false;
+      for (var j = i + 1; j < all.length; j++) {
+        var gap = text.slice(chain[chain.length - 1].e, all[j].s);
+        if (!/^\s*(?:,|or|\/|,\s*or|either)\s*$/i.test(gap)) break;
+        if (/or|\//i.test(gap)) hasOr = true;
+        chain.push(all[j]);
+      }
+      if (hasOr && chain.length > 1) chain.forEach(function (c) { group[root(c.k)] = root(chain[0].k); });
+    }
+    kws.forEach(function (k, ki) { k.group = root(ki); });
 
     kws.sort(function (a, b) {
       return (a.weight === b.weight ? 0 : a.weight === "req" ? -1 : 1) || a.firstAt - b.firstAt;
@@ -222,25 +292,80 @@
     return null;
   }
 
+  /* Dates. A single date can be written as:
+       Jan 2020 · January, 2020 · Jan '20 · 01/2020 · 1.2020 · 2020-01 · 2020/01 · Summer 2021 · Q3 2022 · 2020
+     A range joins two dates with - – — to until till → (or "since"/"from" + date, open-ended).
+     The end can also be: present, now, current, today, ongoing, date, or a two-digit year ("2019–21"). */
   var MON = "(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\\.?";
-  var DATE = "(?:(" + MON + ")\\s+)?((?:19|20)\\d{2})|(\\d{1,2})\\s*/\\s*((?:19|20)\\d{2})";
-  var RANGE_RE = new RegExp("(?:" + DATE + ")\\s*(?:-|–|—|to|until|till)\\s*(?:(?:" + DATE + ")|(present|now|current|currently|today|ongoing|date))", "gi");
+  var SEASON = "(?:spring|summer|autumn|fall|winter)";
+  var YEAR = "(?:19|20)\\d{2}";
+  var ONE_DATE = "(?:(?:" + MON + "|" + SEASON + "|q[1-4])[\\s,]*(?:" + YEAR + "|'\\d{2})|\\d{1,2}[/.]" + YEAR + "|" + YEAR + "[/.-]\\d{1,2}(?!\\d)|" + YEAR + ")";
+  var NOW_WORDS = "present|now|current|currently|today|ongoing|date|to date";
+  var SEP = "\\s*(?:-|–|—|to|until|till|→|>)\\s*";
+  var RANGE_RE = new RegExp("(" + ONE_DATE + ")" + SEP + "(" + ONE_DATE + "|" + NOW_WORDS + "|'?\\d{2}(?!\\d))", "gi");
+  var SINCE_RE = new RegExp("\\b(?:since|from)\\s+(" + ONE_DATE + ")(?!" + SEP + ")", "gi");
   var MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
-  function monthIndex(mon, year, num, numYear, isEnd) {
-    if (year) return parseInt(year, 10) * 12 + (mon ? MONTHS[mon.slice(0, 3).toLowerCase()] : (isEnd ? 11 : 0));
-    if (numYear) return parseInt(numYear, 10) * 12 + Math.max(0, Math.min(11, parseInt(num, 10) - 1));
-    return null;
+  var SEASONS = { spring: 3, summer: 6, autumn: 9, fall: 9, winter: 0 };
+
+  // Turn one written date into a month index (year * 12 + month), or null.
+  function parseDate(s, isEnd, startYear) {
+    s = s.trim().toLowerCase();
+    var m;
+    if ((m = s.match(/^'?(\d{2})$/)) && startYear) {               // "2019–21"
+      var y2 = Math.floor(startYear / 100) * 100 + parseInt(m[1], 10);
+      if (y2 < startYear) y2 += 100;
+      return y2 * 12 + 11;
+    }
+    var yearOf = function (str) {
+      var y = str.match(/(19|20)\d{2}/);
+      if (y) return parseInt(y[0], 10);
+      var a = str.match(/'(\d{2})/);
+      return a ? 2000 + parseInt(a[1], 10) : null;
+    };
+    var year = yearOf(s);
+    if (year === null) return null;
+    if ((m = s.match(/^(\d{1,2})[/.](?:19|20)\d{2}$/)) || (m = s.match(/^(?:19|20)\d{2}[/.-](\d{1,2})$/))) {
+      return year * 12 + Math.max(0, Math.min(11, parseInt(m[1], 10) - 1));
+    }
+    if ((m = s.match(/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/))) return year * 12 + MONTHS[m[1]];
+    if ((m = s.match(/^(spring|summer|autumn|fall|winter)/))) return year * 12 + SEASONS[m[1]];
+    if ((m = s.match(/^q([1-4])/))) return year * 12 + (parseInt(m[1], 10) - 1) * 3 + (isEnd ? 2 : 0);
+    return year * 12 + (isEnd ? 11 : 0);
   }
+
   function dateRanges(text) {
     var out = [], m, now = new Date(), nowIdx = now.getFullYear() * 12 + now.getMonth();
+    var add = function (s, e, open) {
+      if (s !== null && e !== null && e >= s && s <= nowIdx && e <= nowIdx + 12) out.push([s, Math.min(e, nowIdx), open]);
+    };
     RANGE_RE.lastIndex = 0;
     while ((m = RANGE_RE.exec(text))) {
-      var s = monthIndex(m[1], m[2], m[3], m[4], false);
-      var e = m[9] ? nowIdx : monthIndex(m[5], m[6], m[7], m[8], true);
-      if (s !== null && e !== null && e >= s && e <= nowIdx + 1) out.push([s, Math.min(e, nowIdx), !!m[9]]);
+      var s = parseDate(m[1], false);
+      var endWord = new RegExp("^(?:" + NOW_WORDS + ")$", "i").test(m[2].trim());
+      var e = endWord ? nowIdx : parseDate(m[2], true, s === null ? null : Math.floor(s / 12));
+      add(s, e, endWord);
     }
+    SINCE_RE.lastIndex = 0;
+    while ((m = SINCE_RE.exec(text))) add(parseDate(m[1], false), nowIdx, true);
     return out;
   }
+
+  // "(3 years)", "2 yrs 6 mos", "18 months" written next to a role: returns months, or 0
+  var DURATION_RE = /(\d{1,2}(?:\.\d)?)\s*\+?\s*(?:years?|yrs?)(?:\s*(?:and\s*|,\s*)?(\d{1,2})\s*(?:months?|mos?))?|(\d{1,2})\s*(?:months?|mos?)\b/i;
+  function durationMonths(line) {
+    if (/\bexperience\b|\bover\b|\bmore than\b/i.test(line)) return 0;   // a claim, not a role's length
+    var m = line.match(DURATION_RE);
+    if (!m) return 0;
+    if (m[3]) return parseInt(m[3], 10);
+    return Math.round(parseFloat(m[1]) * 12) + (m[2] ? parseInt(m[2], 10) : 0);
+  }
+  // "6 years of experience", "over 8 years' experience": a stated total, in years, or 0
+  var CLAIM_RE = /(\d{1,2})\s*\+?\s*(?:years?|yrs?)(?:'|’)?\s*(?:of\s+)?(?:\w+\s+){0,3}?experience/i;
+  function claimedYears(text) {
+    var m = text.match(CLAIM_RE);
+    return m ? parseInt(m[1], 10) : 0;
+  }
+
   function totalYears(ranges) {
     var r = ranges.map(function (x) { return [x[0], x[1]]; }).sort(function (a, b) { return a[0] - b[0]; });
     var merged = [];
@@ -374,10 +499,21 @@
         else { status = "miss"; where = "Not found"; }
       }
       var w = k.weight === "req" ? 2 : 1;
-      weights += w;
-      earned += w * (status === "ok" ? 1 : status === "part" ? 0.5 : 0);
       return { term: k.term, names: k.names, weight: k.weight, count: k.count, status: status, where: where, note: note,
-        related: related, cert: k.cert, w: w, inBullets: inBullets, certOnly: inSkills > 0 && inCerts === inSkills };
+        related: related, cert: k.cert, w: w, inBullets: inBullets, certOnly: inSkills > 0 && inCerts === inSkills,
+        group: k.group };
+    });
+    // Either/or: when the job accepts any one of several ("ACCA or CIMA") and you have one, the others are covered.
+    keywords.forEach(function (k) {
+      if (k.status === "ok") return;
+      var mate = keywords.filter(function (o) { return o !== k && o.group === k.group && o.status === "ok"; })[0];
+      if (!mate) return;
+      k.status = "ok"; k.covered = true; k.related = null;
+      k.where = "Covered by " + mate.term; k.note = "The job asks for either one";
+    });
+    keywords.forEach(function (k) {
+      weights += k.w;
+      earned += k.w * (k.status === "ok" ? 1 : k.status === "part" ? 0.5 : 0);
     });
     var hard = weights ? Math.round(40 * earned / weights) : 40;
 
@@ -403,13 +539,22 @@
 
     /* Experience and seniority */
     var expLines = st.lines.filter(function (l) { return st.sections.experience ? l.section === "experience" : l.section !== "education"; });
-    var ranges = [];
-    expLines.forEach(function (l) { ranges = ranges.concat(dateRanges(l.text)); });
-    var anyDates = ranges.length > 0 || dateRanges(all).length > 0;
-    var have = totalYears(ranges);
+    var ranges = [], durMonths = 0;
+    expLines.forEach(function (l) {
+      var r = dateRanges(l.text);
+      if (r.length) ranges = ranges.concat(r);
+      else durMonths += durationMonths(l.text);   // a role written as "(3 years)" with no dates
+    });
+    durMonths = Math.min(durMonths, 480);
+    var claimed = claimedYears(all);
+    var anyDates = ranges.length > 0 || durMonths > 0 || dateRanges(all).length > 0;
+    var have = 0, haveFrom = "none";
+    if (ranges.length || durMonths) { have = totalYears(ranges) + Math.round(durMonths / 6) / 2; haveFrom = "dates"; }
+    else if (claimed) { have = claimed; haveFrom = "claim"; }
+    var dated = haveFrom !== "none";
     var need = jd.yearsNeeded;
     var expScore;
-    if (!ranges.length) expScore = need ? 6 : 10;
+    if (!dated) expScore = need ? 6 : 10;
     else if (need) expScore = Math.round(20 * Math.min(1, have / need));
     else expScore = 20;
     var juniorTitles = /\b(junior|jr\.?|intern|graduate|trainee|apprentice)\b/i.test(expLines.map(function (l) { return l.text; }).join(" "));
@@ -477,12 +622,15 @@
       quote: (verbLed.length / n >= 0.8 ? verbLed[0] : B.filter(function (b) { return !startsWithVerb(b); })[0]) || "" }
       : { key: "verbs", name: "Action-led bullets", level: "weak", text: "We couldn't find any bullet points to check.", quote: "" });
 
-    var roleLine = (expLines.filter(function (l) { return dateRanges(l.text).length; })[0] || {}).text || "";
+    var roleLine = (expLines.filter(function (l) { return dateRanges(l.text).length || durationMonths(l.text); })[0] || {}).text || "";
+    var haveText = haveFrom === "claim" ? "Your resume states about " + plural(have, "year") + " of experience, but your roles have no dates."
+      : "Your relevant experience totals about " + plural(have, "year") + ".";
     var sen;
-    if (!ranges.length) sen = { level: need ? "weak" : "comp", text: "We couldn't find dates for your roles, so we can't tell how much experience you have." };
+    if (!dated) sen = { level: need ? "weak" : "comp", text: "We couldn't find dates for your roles, so we can't tell how much experience you have." };
     else if (need) sen = { level: have >= need ? "strong" : (have >= need * 0.75 || have >= need - 1) ? "comp" : "weak",
-      text: "The role asks for " + need + "+ years. Your relevant experience totals about " + plural(have, "year") + "." };
-    else sen = { level: "strong", text: "The job description doesn't ask for a number of years. We found about " + plural(have, "year") + " of dated experience." };
+      text: "The role asks for " + need + "+ years. " + haveText };
+    else sen = { level: "strong", text: "The job description doesn't ask for a number of years. " + haveText };
+    if (haveFrom === "claim" && sen.level === "strong") sen.level = "comp";
     if (jd.level === "Senior" && juniorTitles && sen.level === "strong") sen.level = "comp";
     rub.push({ key: "seniority", name: "Seniority fit", level: sen.level, text: sen.text, quote: clip(roleLine, 120) });
 
@@ -492,7 +640,7 @@
       quote: long.length ? clip(long[0], 140) : "" }
       : { key: "length", name: "Concise bullets", level: "comp", text: "We couldn't find any bullet points to check.", quote: "" });
 
-    var listed = keywords.filter(function (k) { return !k.cert && (k.status === "ok" || (k.status === "part" && !k.related)); });
+    var listed = keywords.filter(function (k) { return !k.cert && !k.covered && (k.status === "ok" || (k.status === "part" && !k.related)); });
     var backed = listed.filter(function (k) { return k.status === "ok"; });
     rub.push(listed.length ? { key: "context", name: "Skills shown in context", level: level(backed.length / listed.length, 0.7, 0.4),
       text: backed.length + " of " + plural(listed.length, "skill") + " from the job description that you mention appear in your experience, not only a skills list.", quote: "" }
