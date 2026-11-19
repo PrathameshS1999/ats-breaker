@@ -159,7 +159,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
   padding: var(--scan-pad); background: var(--scan-bg);
   border: 1px solid var(--line); border-radius: var(--r-card);
 }
-.field { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; min-width: 0; }
 .field-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-weight: 600; font-size: var(--fs-sm); }
 .drop {
   position: relative; display: grid; place-items: center; align-content: center; gap: 6px; text-align: center;

@@ -1,0 +1,133 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">
+<title>Scan tests</title>
+<style>body{background:#0E1419;color:#E4ECF1;font:14px/1.5 "JetBrains Mono",monospace;margin:16px}</style></head>
+<body><!-- Regression tests for the in-browser scan (js/scan-*.js). Open this file in a browser; the last line says ALL PASSED or how many failed. -->
+<pre id="out">pending</pre>
+<script src="../js/scan-keywords.js"></script>
+<script src="../js/scan-read.js"></script>
+<script src="../js/scan-score.js"></script>
+<script src="../js/scan-smart.js"></script>
+<script>
+var out = [], fails = 0;
+function check(name, got, want) {
+  var ok = JSON.stringify(got) === JSON.stringify(want);
+  if (!ok) fails++;
+  out.push((ok ? "PASS " : "FAIL ") + name + (ok ? "" : "\n     got:  " + JSON.stringify(got) + "\n     want: " + JSON.stringify(want)));
+}
+function kw(jd) { return ATS.analyseJD(jd).keywords.map(function (k) { return k.term + ":" + k.weight; }); }
+function has(jd, term) { return ATS.analyseJD(jd).keywords.some(function (k) { return k.term === term; }); }
+function weight(jd, term) { var k = ATS.analyseJD(jd).keywords.filter(function (k) { return k.term === term; })[0]; return k ? k.weight : null; }
+function score(resume, jd) { return ATS.score({ source: "text", lines: resume.split("\n").filter(Boolean).map(function (t) { var b = /^[•-]\s*/.test(t); return { text: t.replace(/^[•-]\s*/, ""), bullet: b, heading: false }; }), flags: {}, ats: [] }, ATS.analyseJD(jd), jd, null); }
+
+try {
+  out.push("terms: " + ATS.terms.length);
+
+  /* 5. Ambiguous short words */
+  check("Go in a tech list counts", has("Required: Python, Go and Kubernetes", "Go"), true);
+  check("Go-to-market is not Go", has("You will own our Go-to-market plan for Europe.", "Go"), false);
+  check("'Go further' is not Go", has("Go further with us. We value curiosity.", "Go"), false);
+  check("R in a stats list counts", has("Skills: SQL, R, Python", "R"), true);
+  check("R&D is not R", has("You'll work closely with R&D on new products.", "R"), false);
+  check("C in a list counts", has("Languages: C, C++ and Rust", "C"), true);
+  check("Grade C is not C", has("Minimum grade C in GCSE Maths.", "C"), false);
+  check("Lean with process context", has("Experience with Lean principles and Kaizen", "Lean"), true);
+  check("'Lean on' is not Lean", has("Lean on your teammates when you need help.", "Lean"), false);
+  check("excel (verb) is not Excel", has("You will excel at building relationships.", "Excel"), false);
+  check("Excel (tool) counts", has("Advanced Excel including pivot tables", "Excel"), true);
+  check("lowercase seo not counted, SEO is", [has("we like seo stuff", "SEO"), has("Strong SEO skills", "SEO")], [false, true]);
+  check("'it' is not IT/acronym; 'qa' lowercase ignored", has("make qa better", "QA"), false);
+  check("Ruby the person is not Ruby", has("Contact Ruby Smith for details.", "Ruby"), false);
+  check("Ruby on a tech line counts", has("Backend in Ruby and PostgreSQL", "Ruby"), true);
+  check("Swift in iOS context", has("Build iOS apps in Swift", "Swift"), true);
+  check("'swift' adjective ignored", has("Swift turnaround of customer requests", "Swift"), false);
+
+  /* 1-2. Coverage beyond tech + synonyms */
+  check("finance JD terms", ["Xero", "month-end close", "reconciliations", "VAT", "accounts payable"].map(function (t) { return has("Required: Xero, month-end close, bank reconciliations, VAT returns and accounts payable.", t); }), [true, true, true, true, true]);
+  check("healthcare JD terms", ["phlebotomy", "EHR", "BLS", "infection control"].map(function (t) { return has("Must have phlebotomy skills, electronic health records experience, BLS and infection control training.", t); }), [true, true, true, true]);
+  check("marketing synonyms", ["SEO", "PPC", "Meta Ads", "conversion rate optimisation"].map(function (t) { return has("search engine optimization, pay-per-click, Facebook Ads and CRO", t); }), [true, true, true, true]);
+  check("languages need context", [has("Fluent French is essential", "French"), has("Experience with French fries? No.", "French")], [true, false]);
+  var r1 = score("EXPERIENCE\n• Managed books in Xero and QuickBooks for 12 clients\nSKILLS\nXero", "Required:\n- accounting\n- Xero");
+  check("related credit: Xero counts toward accounting", r1.keywords.filter(function (k) { return k.term === "accounting"; })[0].status, "part");
+
+  /* 4. Required / Preferred */
+  check("Nice to have heading", weight("Requirements:\n- Python\n\nNice to have:\n- Kafka", "Kafka"), "pref");
+  check("Markdown heading ## Bonus points", weight("## What you'll need\n- Python\n\n## Bonus points\n- Rust", "Rust"), "pref");
+  check("**Preferred qualifications**", weight("**Basic qualifications**\n- SQL\n\n**Preferred qualifications**\n- Snowflake", "Snowflake"), "pref");
+  check("inline 'is a plus'", weight("You know Python well. Experience with Go is a plus.", "Go"), "pref");
+  check("inline 'ideally'", weight("Requirements: SQL and ideally dbt.", "dbt"), "pref");
+  check("inline mixed sentence", [weight("Python is required, Go a big plus.", "Python"), weight("Python is required, Go a big plus.", "Go")], ["req", "pref"]);
+  check("must overrides preferred section", weight("Preferred:\n- You must have Terraform", "Terraform"), "req");
+  check("What we're looking for = required", weight("What we're looking for:\n- Tableau", "Tableau"), "req");
+  check("Responsibilities alone = required (default)", weight("Responsibilities:\n- Build dashboards in Tableau", "Tableau"), "req");
+  check("years in words", ATS.analyseJD("You have three years of SQL experience.").yearsNeeded, 3);
+
+  /* 3. Dates */
+  function yrs(resume) { var r = score("EXPERIENCE\n" + resume, "Analyst\nRequired: SQL. 10+ years"); return r.years; }
+  var nowY = new Date().getFullYear();
+  check("Jan 2020 – Dec 2021", yrs("Analyst, Acme, Jan 2020 – Dec 2021"), 2);
+  check("2019–21 two-digit end", yrs("Analyst, Acme, 2019–21"), 3);
+  check("06/2018 - 05/2020", yrs("Analyst, Acme, 06/2018 - 05/2020"), 2);
+  check("2018-06 to 2020-05", yrs("Analyst, Acme, 2018-06 to 2020-05"), 2);
+  check("Summer 2020 – Summer 2021", yrs("Intern, Acme, Summer 2020 – Summer 2021"), 1);
+  check("Q1 2019 – Q4 2019", yrs("Contractor, Acme, Q1 2019 – Q4 2019"), 1);
+  check("Jan '19 – Dec '20", yrs("Analyst, Acme, Jan '19 – Dec '20"), 2);
+  check("Since 2022 (open-ended)", yrs("Analyst, Acme, since Jan " + (nowY - 3)) >= 3, true);
+  check("2015 to date", yrs("Analyst, Acme, 2015 to date") >= nowY - 2015, true);
+  check("duration only (3 years)", yrs("Analyst, Acme (3 years)"), 3);
+  check("duration 2 yrs 6 mos", yrs("Analyst, Acme — 2 yrs 6 mos"), 2.5);
+  var claim = score("SUMMARY\nAnalyst with 7 years of experience in finance\nEXPERIENCE\nAnalyst, Acme\n• Built reports", "Analyst\nRequired: SQL. 5+ years");
+  check("stated 7 years used when roles undated", [claim.years, claim.rubric.filter(function (r) { return r.key === "seniority"; })[0].level], [7, "comp"]);
+  /* Regression: the original SRE example still reads sensibly */
+  var SRE_JD = "Site Reliability Engineer, Northwind Cloud (Dublin, hybrid). You'll keep our customer platform reliable as it scales.\n\nRequired:\n- 2+ years running production on Kubernetes\n- Terraform and infrastructure as code\n- CI/CD pipelines\n- Prometheus and Grafana\n- Python\n- On-call incident response\n\nPreferred:\n- SLOs and error budgets\n- Go\n- AWS\n- AWS Certified Solutions Architect";
+  out.push("SRE keywords: " + kw(SRE_JD).join(", "));
+  check("SRE: Go is preferred", weight(SRE_JD, "Go"), "pref");
+  check("SRE: Kubernetes required", weight(SRE_JD, "Kubernetes"), "req");
+  var MKT = "Marketing Manager – Brightleaf Foods (London)\n\nAbout the role\nYou'll lead our brand and growth marketing across the UK.\n\nWhat you'll need:\n• 5+ years in B2C marketing\n• Strong SEO and content marketing experience\n• Paid social and Google Ads\n• Stakeholder management and budgeting\n• HubSpot or a similar CRM\n• Excellent written communication\n\nNice to have:\n• Experience in food and drink\n• Google Analytics\n• A degree in marketing or a related field";
+  out.push("Marketing keywords: " + kw(MKT).join(", "));
+  /* Either/or requirements */
+  function st(resume, jd, term) { var k = score(resume, jd).keywords.filter(function (k) { return k.term === term; })[0]; return k ? k.status + (k.covered ? "/covered" : "") : null; }
+  var EJD = "Requirements:\n- ACCA or CIMA qualified\n- Experience with Xero/Sage\n- Python, Go or Rust\n- Python, SQL and Excel";
+  var ERES = "EXPERIENCE\n• Ran Xero for 20 clients and built Python scripts\nCERTIFICATIONS\nACCA";
+  check("ACCA or CIMA: CIMA covered", st(ERES, EJD, "CIMA"), "ok/covered");
+  check("Xero/Sage: Sage covered", st(ERES, EJD, "Sage"), "ok/covered");
+  check("Python, Go or Rust: Rust covered", st(ERES, EJD, "Rust"), "ok/covered");
+  check("'and' list is not either/or: SQL still missing", st(ERES, EJD, "SQL"), "miss");
+  check("covered items produce no fix", score(ERES, EJD).fixes.some(function (f) { return /CIMA|Sage|Rust/.test(f.html); }), false);
+  /* Company name on the title line is not a skill */
+  check("company name 'Northfield Logistics' ignored", has("Operations Manager – Northfield Logistics\n\nRequirements:\n- Route planning", "logistics"), false);
+  check("but logistics in requirements counts", has("Operations Manager – Northfield Logistics\n\nRequirements:\n- Logistics experience", "logistics"), true);
+  check("one-paragraph JD keeps its keywords", has("Data Analyst, Acme Ltd. You will use SQL and Tableau daily to report on sales.", "Tableau"), true);
+  check("overlapping roles not double counted", yrs("Analyst, Acme, 2018 – 2020\nTutor, Uni, 2019 – 2020"), 3);
+
+  /* Found in the Jobscan comparison (Nov 2026) */
+  var BP = "As a Azure Cloud Engineer you will\n- Support and operate cloud environments, including monitoring, incident resolution, performance optimisation and lifecycle management.\n- Design, deploy and manage Azure cloud resources in line with best practices and organisational standards.\n- Collaborate with Architecture, Security and Development teams to deliver cloud solutions that meet business and technical requirements.";
+  check("task phrase 'operate cloud environments' is not a keyword", has(BP, "operate cloud environments"), false);
+  check("vague 'organisational standards' / 'technical requirements' dropped", [has(BP, "organisational standards"), has(BP, "technical requirements")], [false, false]);
+  check("real phrase 'lifecycle management' still kept", has(BP, "lifecycle management"), true);
+  var STR = "Minimum requirements\n- You are able to think rigorously, navigate ambiguity, and make hard decisions and tradeoffs.\n\nPreferred qualifications\n- You have industry experience working with Ruby, TypeScript, and React.";
+  check("'navigate ambiguity' / 'make hard decisions' dropped", [has(STR, "navigate ambiguity"), has(STR, "make hard decisions")], [false, false]);
+  check("'You have …' under Preferred stays Preferred", [weight(STR, "Ruby"), weight(STR, "TypeScript")], ["pref", "pref"]);
+  var FID = "Primary Responsibilities:\n- Designs applications or subsystems on major projects and for/in multiple platforms.\n- Performs independent and complex technical and functional analysis for multiple projects.";
+  check("'for/in multiple platforms' / 'complex technical' dropped", [has(FID, "for/in multiple platforms"), has(FID, "complex technical")], [false, false]);
+  check("'Key Competencies' is a heading, not a keyword", has("Preferred Skills\n- Docker\n\nKey Competencies\n- Strong problem-solving and analytical thinking", "Key Competencies"), false);
+  check("'rewards' (a perk) is not compensation and benefits", has("One of our greatest rewards is seeing the impact our work has.", "compensation and benefits"), false);
+  var IBMJD = "Required:\n- Microsoft Azure\n\nPreferred:\n- Experience with Docker, Kubernetes, or Azure Kubernetes Service (AKS).";
+  var ibmK = score("EXPERIENCE\n• Ran Kubernetes clusters on Microsoft Azure", IBMJD).keywords;
+  var dk = ibmK.filter(function (k) { return k.term === "Docker"; })[0];
+  check("AKS found from its full name", has(IBMJD, "AKS"), true);
+  check("Docker covered by Kubernetes, not by Azure", dk && dk.where, "Covered by Kubernetes");
+  var ak = ibmK.filter(function (k) { return k.term === "AKS"; })[0];
+  check("AKS covered by the skill you have (Kubernetes), not by another covered one", ak && ak.where, "Covered by Kubernetes");
+  function sc(lines, flags) { return ATS.score({ source: "docx", lines: lines, flags: flags || {}, ats: [] }, ATS.analyseJD("Required: runbooks"), "Required: runbooks", null); }
+  var L = [{ text: "EXPERIENCE", bullet: false }, { text: "Updated runbooks after each incident", bullet: true }, { text: "Cut alert noise by 40%", bullet: true },
+    { text: "TECHNICAL SKILLS", bullet: false }, { text: "Monitoring: Prometheus, Grafana", bullet: true }, { text: "Scripting: Python, Bash", bullet: true }, { text: "Documentation: runbooks", bullet: true }];
+  var r2 = sc(L);
+  var verbs = r2.rubric.filter(function (r) { return r.key === "verbs"; })[0].text;
+  check("skills-list items aren't counted as bullets", /of 2 bullets/.test(verbs) || /^2 /.test(verbs) || /All 2 /.test(verbs), true);
+  check("no 'As \"runbooks\"' for the same word", /^As /.test(r2.keywords[0].where), false);
+  check("table layout issue is titled 'Table layout'", sc(L, { tableLayout: true }).issues.filter(function (x) { return x.id === "p-columns"; })[0].title, "Table layout");
+  out.push("verbs rubric: " + verbs);
+} catch (e) { out.push("ERROR " + e.message + "\n" + e.stack); fails++; }
+out.push("\n" + (fails ? fails + " FAILED" : "ALL PASSED"));
+document.getElementById("out").textContent = out.join("\n");
+</script></body></html>

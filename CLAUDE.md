@@ -53,13 +53,18 @@ Loaded on `index.html` only, in this order:
 - `js/scan-score.js` — `ATS.analyseJD` (title, level, years incl. "three years", degree,
   keywords; Required/Preferred from headings in `HEADINGS` incl. Markdown/bold, and
   overridden by in-sentence phrases like "is a plus", "ideally", "must"; either/or groups
-  like "ACCA or CIMA" where one covers the rest). Dates: many formats (`parseDate`,
+  like "ACCA or CIMA" where one covers the rest, always named after a skill the resume
+  really has). Generic phrases from requirement lists are filtered by `JUNK`, `VAGUE`,
+  `TASK_VERB` (verb-led task wording) and `TRAIL_ADJ` ("complex technical"); "You have…"
+  is not a Required signal (Preferred lists use it). Dates: many formats (`parseDate`,
   "2019–21", "06/2020", "Summer 2021", "Q3 2022", "since 2019"), role durations
   ("(3 years)") and a stated "N years of experience" fallback.
   `ATS.score` (hard skills 40, job title 10,
   experience 20, education/certs 10, parse 20; six rubric items rated Strong 100 /
   Competitive 60 / Needs work 20, averaged: ≥75 Strong, 50–74 Competitive; fixes ranked
-  by estimated gain). Keep `how-scoring-works.html` in step with any change here.
+  by estimated gain). Bullets come from experience/projects only: list items under
+  skills, certifications and education (`NOT_BULLETS`) aren't counted.
+  Keep `how-scoring-works.html` in step with any change here.
 - `js/scan-smart.js` — optional "Smart matching" (off by default; switch on the form,
   choice kept in localStorage). Loads Transformers.js 3.8.1 from jsDelivr and the
   `Xenova/bge-small-en-v1.5` model (~35 MB, cached) from Hugging Face via dynamic
@@ -75,6 +80,13 @@ Loaded on `index.html` only, in this order:
   ES-module only). Loaded with `isEvalSupported: false` (CVE-2024-4367 mitigation).
 sessionStorage keeps only a score snapshot (`ats-last-scan`, no resume text) so a rescan
 of the same job description can show "Since your first scan", plus ticked fixes.
+
+## Tests
+`tests/scan-tests.html` — 69 regression tests for the scan (keyword detection, ambiguous
+words, Required/Preferred, dates, either/or, and the bugs from the Jobscan comparison).
+Serve the folder (e.g. `python3 -m http.server 8765`) and open
+`/tests/scan-tests.html`; the last line says ALL PASSED or how many failed. Add a test
+for every scan bug you fix. Change history and the comparison write-up: `CHANGELOG.md`.
 
 ## Forms
 Real `<form>` elements with a `name` on every field.

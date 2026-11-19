@@ -58,7 +58,7 @@
   var HEADINGS = [
     ["pref", "preferred(?: qualifications| skills| experience| requirements)?|nice[- ]to[- ]haves?|bonus(?: points)?|bonus if you(?: have)?|desirable(?: skills| criteria| requirements)?|good to have|great to have|it" + A + "s a plus|pluses|plus|even better|extra credit|optional|additional (?:skills|qualifications)|would be (?:great|nice|a plus)"],
     ["other", "(?:key |main |core )?responsibilities|(?:key |main )?duties|what you" + A + "ll do|what you will do|what you" + A + "ll be doing|day[- ]to[- ]day|in this role|the role|about the role|role overview|overview|job summary|about (?:us|the company|the team)|who we are|our team|benefits|what we offer|perks|compensation|salary|how to apply|equal opportunit\\w*|our values|why join us|why us"],
-    ["req", "required(?: skills| qualifications| experience)?|requirements|minimum (?:requirements|qualifications)|basic qualifications|must[- ]haves?|essential(?: skills| criteria| requirements)?|key (?:skills|requirements)|what you" + A + "ll need|you" + A + "ll need|you will need|what we" + A + "re looking for|what we are looking for|who you are|about you|your profile|your skills|your experience|(?:the )?ideal candidate|you have|you bring|what you" + A + "ll bring|what you bring|you" + A + "ll bring|qualifications|skills(?: and experience| & experience| required)?|experience(?: required)?|person specification|candidate requirements|technical skills|competencies"]
+    ["req", "required(?: skills| qualifications| experience)?|requirements|minimum (?:requirements|qualifications)|basic qualifications|must[- ]haves?|essential(?: skills| criteria| requirements)?|key (?:skills|requirements)|what you" + A + "ll need|you" + A + "ll need|you will need|what we" + A + "re looking for|what we are looking for|who you are|about you|your profile|your skills|your experience|(?:the )?ideal candidate|you have|you bring|what you" + A + "ll bring|what you bring|you" + A + "ll bring|qualifications|skills(?: and experience| & experience| required)?|experience(?: required)?|person specification|candidate requirements|technical skills|(?:key |core )?competencies"]
   ];
   var MARKER_RE = new RegExp("(^|\\n|[.;]\\s+)[ \\t]*(?:[-•*#>]+[ \\t]*)?(?:\\*\\*|__)?(" +
     HEADINGS.map(function (h) { return h[1]; }).join("|") + ")(?:\\*\\*|__)?[ \\t]*(?::|\\n|—|–|$)", "gi");
@@ -66,7 +66,7 @@
 
   // Phrases inside a sentence that change a keyword's weight ("Go is a plus", "ideally Kafka").
   var INLINE_PREF = /\b(?:a (?:big |huge |strong |real )?(?:plus|bonus|advantage)|is a plus|are a plus|nice[- ]to[- ]have|desirable|preferred|preferably|ideally|advantageous|beneficial|would be (?:great|nice|helpful|useful|a plus)|is welcome|are welcome|bonus|not (?:required|essential|necessary|mandatory))\b/i;
-  var INLINE_REQ = /\b(?:must|required|essential|mandatory|need(?:s)? to have|you have|minimum of|at least|proven|demonstrable|strong (?:experience|knowledge|background))\b/i;
+  var INLINE_REQ = /\b(?:must|required|essential|mandatory|need(?:s)? to have|minimum of|at least|proven|demonstrable|strong (?:experience|knowledge|background))\b/i;
 
   var STOP = ("a an the and or of in on at to for with as by from into via using use is are be been being you your our we will " +
     "can able ability strong excellent good great solid proven deep broad demonstrated hands-on handson working work " +
@@ -77,6 +77,17 @@
   var STOPSET = {};
   STOP.forEach(function (w) { STOPSET[w] = 1; });
   var JUNK = /\b(team|teams|company|companies|opportunity|culture|salary|benefits|location|hybrid|remote|office|environment|role|roles|candidate|candidates|people|customers|day|days|week|weeks|time|degree|bachelor|master|phd|university|world|industry|business|things|stuff|someone|anyone|production|pipelines?)\b/i;
+  // Generic phrases that describe a task or a vague thing rather than a skill an ATS would search for
+  // ("operate cloud environments", "navigate ambiguity", "technical requirements", "complex technical").
+  var TASK_VERB = /^(operate|operating|navigate|navigating|make|making|perform|performing|implement|implementing|develop|developing|design|designing|deliver|delivering|drive|driving|ensure|ensuring|support|supporting|maintain|maintaining|contribute|contributing|collaborate|collaborating|think|thinking|enjoy|enjoying|create|creating|help|helping|provide|providing|establish|establishing|assist|assisting|participate|participating|translate|translating|leverage|leveraging|empower|empowering|experiment|experimenting|uphold|upholding|determine|determining|refine|refining|apply|applying|configure|configuring|tailor|tailoring|resolve|resolving|identify|identifying|enable|enabling|promote|promoting|engage|engaging|work|works|thrive|thriving|join|joining|grow|growing|gain|gaining|own|owning|bring|bringing|take|taking|get|getting|keep|keeping|stay|staying|meet|meeting|achieve|achieving)$/i;
+  var VAGUE = /\b(environments?|requirements?|standards?|efforts?|platforms?|decisions?|solutions?|initiatives?|projects?|tasks?|goals?|problems?|approaches|ideas?|assignments?|phases?|activities|capabilities|opportunities|tradeoffs?|trade-offs?|details?|users?|ambiguity|complexity|impact|scope|aspects?|areas?|things?|ways?|levels?)\b/i;
+  var TRAIL_ADJ = /^(technical|complex|multiple|various|new|modern|large-scale|fast-paced|cross-functional|high|key|robust|scalable|innovative|creative|original|several|different|major|moderate|independent|comprehensive|end-to-end|hard|smart)$/i;
+  function vaguePhrase(words) {
+    if (words.length >= 2 && TASK_VERB.test(words[0])) return true;
+    if (TRAIL_ADJ.test(words[words.length - 1])) return true;
+    if (words.some(function (w) { return /\//.test(w) && w.split("/").every(function (p) { return !p || STOPSET[p.toLowerCase()]; }); })) return true;
+    return VAGUE.test(words.join(" "));
+  }
   var SOFT = /^(communication|leadership|collaboration|teamwork|ownership|mentoring|coaching|negotiation|presentation|organisation|organization|problem[- ]solving|prioritisation|prioritization|attention to detail|time management|adaptability|creativity)$/i;
   var DEGREE_RE = /\b(bachelor(?:'|’)?s?|master(?:'|’)?s?|ph\.?\s?d|doctorate|b\.?\s?sc|m\.?\s?sc|bsc|msc|b\.?eng|m\.?eng|mba|degree)\b/i;
   var TITLE_WORD = /\b(engineer|developer|manager|designer|analyst|scientist|architect|consultant|specialist|coordinator|director|lead|administrator|officer|assistant|associate|executive|technician|nurse|teacher|accountant|writer|editor|marketer|representative|advisor|adviser|intern|head|recruiter|planner|producer|strategist|researcher|tester|operator|agent|clerk|controller|auditor|buyer|chef|pharmacist|therapist|physician|lawyer|paralegal|owner|programmer|sre)s?\b/i;
@@ -234,7 +245,7 @@
         var words = cleanChunk(chunk);
         if (!words.length || words.length > 3) return;
         var phrase = words.join(" ");
-        if (/\d/.test(phrase) || phrase.length < 3 || JUNK.test(phrase)) return;
+        if (/\d/.test(phrase) || phrase.length < 3 || JUNK.test(phrase) || vaguePhrase(words)) return;
         if (words.some(function (w) { return w.length < 2 || STOPSET[w.toLowerCase()]; })) return;
         if (kws.some(function (k) { return k.names.some(function (n) { return has(phrase, n); }); })) return;
         var proper = /[A-Z]/.test(phrase.charAt(0)) && words.length === 1 && !/^(The|A|An|You|We|Our)$/.test(phrase);
@@ -428,6 +439,8 @@
     return /\d/.test(stripped) || /%|£|\$|€/.test(b) || /\b(doubled|tripled|halved)\b/i.test(b);
   }
 
+  // List items in these sections are skills or qualifications, not achievement bullets
+  var NOT_BULLETS = { skills: 1, certifications: 1, education: 1 };
   function structure(model) {
     var lines = model.lines.map(function (l) { return { text: l.text, bullet: l.bullet, heading: l.heading, section: "none" }; });
     var current = "none", found = {};
@@ -440,6 +453,7 @@
     var bullets = [];
     lines.forEach(function (l, i) {
       if (l.isHeading) return;
+      if (l.bullet && NOT_BULLETS[l.section]) return;
       if (l.bullet) { bullets.push({ text: l.text, section: l.section }); return; }
       var prev = bullets[bullets.length - 1];
       var prevLine = lines[i - 1];
@@ -491,7 +505,10 @@
         k.names.forEach(function (n, ni) {
           var c = findAll(l.text, n).length;
           if (!c) return;
-          if (ni > 0 && !alias && n.toLowerCase() !== k.term.toLowerCase()) alias = findAll(l.text, n)[0].text;
+          if (ni > 0 && !alias) {
+            var said = findAll(l.text, n)[0].text, base = function (x) { return x.toLowerCase().replace(/(?:es|s)$/, ""); };
+            if (base(said) !== base(k.term)) alias = said;
+          }
           if (l.section === "skills") inSkills += c;
           else if (l.section === "certifications") { inSkills += c; inCerts += c; }
           else inBody += c;
@@ -534,7 +551,8 @@
     // Either/or: when the job accepts any one of several ("ACCA or CIMA") and you have one, the others are covered.
     keywords.forEach(function (k) {
       if (k.status === "ok") return;
-      var mate = keywords.filter(function (o) { return o !== k && o.group === k.group && o.status === "ok"; })[0];
+      // Name a skill the resume really has, not one that is itself only "covered"
+      var mate = keywords.filter(function (o) { return o !== k && o.group === k.group && o.status === "ok" && !o.covered; })[0];
       if (!mate) return;
       k.status = "ok"; k.covered = true; k.related = null;
       k.where = "Covered by " + mate.term; k.note = "The job asks for either one";
@@ -614,6 +632,7 @@
       fix: "<b>We couldn't find your email or phone.</b> Put them in plain text in the first lines of the page body.",
       loc: [["ATS view", "#parse-preview"]] });
     if (model.flags.columns || model.flags.tableLayout) issues.push({ id: "p-columns", pts: 6,
+      title: model.flags.tableLayout ? "Table layout" : "Two columns",
       flag: model.flags.tableLayout ? "Table layout: text from side-by-side cells is read across and mixed together." : "Two-column layout: text from one column is mixed into the other.",
       fix: "<b>Your resume uses " + (model.flags.tableLayout ? "a table to make columns" : "two columns") + ".</b> Many ATSs read straight across the page, so text from both columns gets mixed together. Use a single column.",
       loc: [["See ATS view", "#parse-preview"]] });

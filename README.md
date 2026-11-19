@@ -19,6 +19,8 @@ three checks (parse, match, recruiter) and a ranked list of what to change.
 | `js/` | Page behaviour (`main.js`) and the scan (`scan-*.js`) |
 | `js/vendor/pdfjs/` | Mozilla pdf.js 3.11.174 (Apache-2.0), used to read PDFs |
 | `design-system/` | The original X-ray design system the site is built from |
+| `tests/scan-tests.html` | Regression tests for the scan (serve the folder, open it, look for ALL PASSED) |
+| `CHANGELOG.md` | What changed and why, including the Jobscan comparison fixes |
 
 See `CLAUDE.md` for design rules and implementation notes.
 

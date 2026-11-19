@@ -152,7 +152,7 @@
       '<pre class="xray scroll" tabindex="0" aria-label="Text as an ATS extracts it">' + atsView(model) + "</pre></div></div>";
     if (r.issues.length) {
       h += '<div class="parse-flags">' + r.issues.map(function (x) {
-        return '<div class="pf">' + I.part + "<div><b>" + esc(ISSUE_TITLE[x.id] || "Issue") + "</b><p>" + esc(x.fix.replace(/<[^>]+>/g, "").replace(/^[^.]*\.\s*/, "")) + "</p></div></div>";
+        return '<div class="pf">' + I.part + "<div><b>" + esc(x.title || ISSUE_TITLE[x.id] || "Issue") + "</b><p>" + esc(x.fix.replace(/<[^>]+>/g, "").replace(/^[^.]*\.\s*/, "")) + "</p></div></div>";
       }).join("") + "</div>";
     }
     h += "</section>";
