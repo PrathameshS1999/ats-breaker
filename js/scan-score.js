@@ -79,11 +79,14 @@
   var JUNK = /\b(team|teams|company|companies|opportunity|culture|salary|benefits|location|hybrid|remote|office|environment|role|roles|candidate|candidates|people|customers|day|days|week|weeks|time|degree|bachelor|master|phd|university|world|industry|business|things|stuff|someone|anyone|production|pipelines?)\b/i;
   // Generic phrases that describe a task or a vague thing rather than a skill an ATS would search for
   // ("operate cloud environments", "navigate ambiguity", "technical requirements", "complex technical").
-  var TASK_VERB = /^(operate|operating|navigate|navigating|make|making|perform|performing|implement|implementing|develop|developing|design|designing|deliver|delivering|drive|driving|ensure|ensuring|support|supporting|maintain|maintaining|contribute|contributing|collaborate|collaborating|think|thinking|enjoy|enjoying|create|creating|help|helping|provide|providing|establish|establishing|assist|assisting|participate|participating|translate|translating|leverage|leveraging|empower|empowering|experiment|experimenting|uphold|upholding|determine|determining|refine|refining|apply|applying|configure|configuring|tailor|tailoring|resolve|resolving|identify|identifying|enable|enabling|promote|promoting|engage|engaging|work|works|thrive|thriving|join|joining|grow|growing|gain|gaining|own|owning|bring|bringing|take|taking|get|getting|keep|keeping|stay|staying|meet|meeting|achieve|achieving)$/i;
+  var TASK_VERB = /^(operate|operating|navigate|navigating|make|making|perform|performing|implement|implementing|develop|developing|design|designing|deliver|delivering|drive|driving|ensure|ensuring|support|supporting|maintain|maintaining|contribute|contributing|collaborate|collaborating|think|thinking|enjoy|enjoying|create|creating|help|helping|provide|providing|establish|establishing|assist|assisting|participate|participating|translate|translating|leverage|leveraging|empower|empowering|experiment|experimenting|uphold|upholding|determine|determining|refine|refining|apply|applying|configure|configuring|tailor|tailoring|resolve|resolving|identify|identifying|enable|enabling|promote|promoting|engage|engaging|work|works|thrive|thriving|join|joining|grow|growing|gain|gaining|own|owning|bring|bringing|take|taking|get|getting|keep|keeping|stay|staying|meet|meeting|achieve|achieving|deploy|deploying|diagnose|diagnosing|author|authoring|scale|scaling|write|writing|integrate|integrating|migrate|migrating|automate|automating|install|installing|handle|handling|plan|planning)$/i;
   var VAGUE = /\b(environments?|requirements?|standards?|efforts?|platforms?|decisions?|solutions?|initiatives?|projects?|tasks?|goals?|problems?|approaches|ideas?|assignments?|phases?|activities|capabilities|opportunities|tradeoffs?|trade-offs?|details?|users?|ambiguity|complexity|impact|scope|aspects?|areas?|things?|ways?|levels?)\b/i;
   var TRAIL_ADJ = /^(technical|complex|multiple|various|new|modern|large-scale|fast-paced|cross-functional|high|key|robust|scalable|innovative|creative|original|several|different|major|moderate|independent|comprehensive|end-to-end|hard|smart)$/i;
+  var LEAD_ADJ = /^(reliable|scalable|robust|resilient|complex|innovative|creative|original|multiple|various|several|different|new|modern|comprehensive|efficient|effective|high-quality|highly|large|small|general|overall|common)$/i;
   function vaguePhrase(words) {
-    if (words.length >= 2 && TASK_VERB.test(words[0])) return true;
+    if (words.length >= 2 && (TASK_VERB.test(words[0]) || LEAD_ADJ.test(words[0]))) return true;
+    // 2. Broken fragments ("point to- site") from hyphenated text split across a chunk
+    if (words.some(function (w) { return /^-|-$/.test(w) || STOPSET[w.replace(/^-+|-+$/g, "").toLowerCase()]; })) return true;
     if (TRAIL_ADJ.test(words[words.length - 1])) return true;
     if (words.some(function (w) { return /\//.test(w) && w.split("/").every(function (p) { return !p || STOPSET[p.toLowerCase()]; }); })) return true;
     return VAGUE.test(words.join(" "));
@@ -209,12 +212,18 @@
       nameEnd = titleEnd + (stop < 0 ? Math.min(rest.length, 80) : Math.min(stop, 80));
     }
     var inCompanyName = function (h) { return nameEnd > 0 && h.start >= titleEnd && h.start < nameEnd; };
-    // Drop hits that sit inside a longer known term (e.g. "AWS" inside "AWS Certified Solutions Architect")
+    // Drop hits that sit inside a longer known term (e.g. "AWS" inside "AWS Certified Solutions Architect"),
+    // and hits that overlap an earlier one ("verbal communication skills" is one skill, not
+    // "verbal communication" plus "communication skills")
     found.forEach(function (f) {
       f.hits = f.hits.filter(function (h) {
         if (inCompanyName(h)) return false;
         return !found.some(function (o) {
-          return o !== f && o.hits.some(function (g) { return g.start <= h.start && g.end >= h.end && (g.end - g.start) > (h.end - h.start); });
+          return o !== f && o.hits.some(function (g) {
+            var inside = g.start <= h.start && g.end >= h.end && (g.end - g.start) > (h.end - h.start);
+            var overlapsEarlier = g.start < h.start && g.end > h.start && g.end < h.end;
+            return inside || overlapsEarlier;
+          });
         });
       });
     });
@@ -273,7 +282,7 @@
       var chain = [all[i]], hasOr = false;
       for (var j = i + 1; j < all.length; j++) {
         var gap = text.slice(chain[chain.length - 1].e, all[j].s);
-        if (!/^\s*(?:,|or|\/|,\s*or|either)\s*$/i.test(gap)) break;
+        if (!/^\s*(?:,|or|\/|,\s*or|either|,?\s*and\s*\/\s*or)\s*$/i.test(gap)) break;
         if (/or|\//i.test(gap)) hasOr = true;
         chain.push(all[j]);
       }
@@ -570,7 +579,7 @@
         return w.length > 1 && !STOPSET[w.toLowerCase()];
       });
       if (core.length) {
-        var phrase = new RegExp(core.map(escapeRe).join("[\\s-]+"), "i");
+        var phrase = new RegExp(core.map(escapeRe).join("[\\s/,|–—-]+"), "i");
         if (phrase.test(all)) titleScore = 10;
         else {
           var best = 0;

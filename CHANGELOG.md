@@ -1,5 +1,45 @@
 # Changelog
 
+## v8 — 19 Nov 2026: fixes from the round-2 Jobscan comparison
+
+### How the bugs were found
+Round 2 used five resumes, each tailored to one cloud/DevOps/SRE role in Ireland: BearingPoint
+(Azure Cloud Engineer), Mastercard (Software Engineer II, SRE/DevOps), Fidelity (Senior Cloud
+Engineer, Galway), IBM (Cloud Infrastructure / DevOps Engineer, Azure) and Stripe (Corporate Systems
+Engineer). Each was scanned in ATS_Breaker and Jobscan. ATS_Breaker was 29 points below Jobscan
+on IBM and 8 below on Stripe, and most of that gap traced back to the bugs below.
+Write-up and screenshots: `~/Downloads/ats-comparison-screenshots/round2/` (RESULTS-round2.md).
+
+### Bugs fixed (`js/scan-score.js`, `js/scan-keywords.js`)
+| # | Bug | Example | Fix |
+| --- | --- | --- | --- |
+| 1 | More task wording became keywords | "deploy ARM templates", "diagnose performance" | `TASK_VERB` gains deploy, diagnose, author, scale, write, integrate, migrate, automate, install, handle, plan |
+| 2 | Broken fragment became a keyword | "point to- site" (from "point-to-site") | Words with a dangling hyphen, or stop words hidden behind one, are rejected |
+| 3 | Job title with "/" only partly matched | IBM "Cloud Infrastructure / DevOps Engineer" scored 8/10 with the exact title in the resume | Title words may be separated by spaces, "/", ",", "\|" or dashes |
+| 4 | "and/or" lists weren't either/or | Stripe "Puppet, Chef, Ansible, and/or Terraform": Puppet and Chef missing despite Terraform | "and/or" joins an either/or chain |
+| 5 | Adjective-led phrase became a keyword | "reliable software systems" | New `LEAD_ADJ` list (reliable, scalable, robust, complex…) |
+| 6 | One skill counted twice | "verbal communication skills" → verbal communication + communication skills | Overlapping known-term hits count once (the earlier one wins) |
+| — | Fix 1 dropped a real skill | "ARM templates" vanished with "deploy ARM templates" | Added known terms "ARM templates" (Azure Resource Manager templates) and "Bicep" |
+
+### Effect on the round-2 resumes (ATS_Breaker)
+| Job | Before | After | Jobscan |
+| --- | --- | --- | --- |
+| BearingPoint | 81 | 81 | 100 |
+| Mastercard | 83 | 83 | 69 |
+| Fidelity | 70 | 71 | 63 |
+| IBM | 69 | **78** | 98 |
+| Stripe | 74 | **81** | 82 |
+| Average | 75 | **79** | 82 |
+
+### Tests
+8 new tests in `tests/scan-tests.html`; 77 of 77 pass.
+
+### Known limitations still open
+- A skill named in a "can't do yet" sentence still counts. IBM's resume says "ARM templates
+  … would be new", and both tools count it as present.
+- The skills table still costs 6 parse points on every one of these resumes. That's a finding
+  about the resume, not a bug.
+
 ## v7 — 18 Nov 2026: fixes from the Jobscan comparison
 
 ### How the bugs were found

@@ -52,7 +52,7 @@
     "EC2", "S3", "Lambda|AWS Lambda", "ECS", "EKS", "Fargate", "RDS", "Aurora", "DynamoDB", "CloudFormation",
     "CloudWatch", "IAM|identity and access management", "VPC", "Route 53", "SQS", "SNS", "Kinesis", "Step Functions",
     "API Gateway", "CloudFront", "Elastic Beanstalk", "SageMaker", "Redshift", "Athena", "AWS Glue", "EMR",
-    "Azure Functions", "Azure DevOps|Azure Pipelines", "AKS|Azure Kubernetes Service", "Azure AD|Entra ID|Azure Active Directory",
+    "Azure Functions", "Azure DevOps|Azure Pipelines", "AKS|Azure Kubernetes Service", "ARM templates|ARM template|Azure Resource Manager templates", "Bicep", "Azure AD|Entra ID|Azure Active Directory",
     "Cosmos DB", "Azure SQL", "Azure Data Factory", "GKE", "BigQuery", "Cloud Run", "Cloud Functions", "Pub/Sub",
     "Firebase", "Firestore", "Dataflow", "Heroku", "Vercel", "Netlify", "DigitalOcean", "Cloudflare", "OpenStack",
     "VMware", "vSphere", "Hyper-V", "Vagrant", "Packer",

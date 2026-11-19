@@ -127,6 +127,22 @@ try {
   check("no 'As \"runbooks\"' for the same word", /^As /.test(r2.keywords[0].where), false);
   check("table layout issue is titled 'Table layout'", sc(L, { tableLayout: true }).issues.filter(function (x) { return x.id === "p-columns"; })[0].title, "Table layout");
   out.push("verbs rubric: " + verbs);
+
+  /* Found in the round-2 Jobscan comparison (Nov 2026) */
+  var IBM2 = "Job description\n- Ability to author and deploy ARM templates\n- Manage daily jobs and such as storage understanding how to scale and diagnose performance.\n- Configure and maintain networking, including hybrid connectivity with technologies like ExpressRoute, site-to-site VPN, and point to- site";
+  check("'deploy ARM templates' / 'diagnose performance' dropped", [has(IBM2, "deploy ARM templates"), has(IBM2, "diagnose performance")], [false, false]);
+  check("ARM templates still found as a skill", has(IBM2, "ARM templates"), true);
+  check("broken fragment 'point to- site' dropped", ATS.analyseJD(IBM2).keywords.some(function (k) { return /point to/i.test(k.term); }), false);
+  check("'reliable software systems' dropped", has("Preferred:\n- Experience in creating scalable and reliable software systems.", "reliable software systems"), false);
+  var STR2 = "Minimum requirements\n- 3+ years experience working with Puppet, Chef, Ansible, and/or Terraform.";
+  var pk = score("EXPERIENCE\n• Built AWS infrastructure in Terraform", STR2).keywords;
+  check("'and/or' list: Puppet and Chef covered by Terraform", ["Puppet", "Chef"].map(function (t) { var k = pk.filter(function (x) { return x.term === t; })[0]; return k && k.where; }), ["Covered by Terraform", "Covered by Terraform"]);
+  var cm = ATS.analyseJD("Requirements:\n- Strong written and verbal communication skills").keywords.map(function (k) { return k.term; });
+  check("'verbal communication skills' counted once", cm.filter(function (t) { return /communication/i.test(t); }).length <= 2 && cm.indexOf("communication skills") < 0, true);
+  var t1 = score("SUMMARY\nCloud Infrastructure / DevOps Engineer (Azure) with Terraform experience\nEXPERIENCE\n• Built Terraform modules", "Cloud Infrastructure / DevOps Engineer (Azure), IBM Ireland\nRequired: Terraform");
+  check("job title with '/' fully matches", t1.titleScore, 10);
+  var t2 = score("SUMMARY\nApplying for the Software Engineer II, SRE/DevOps role\nEXPERIENCE\n• Built CI/CD pipelines", "Software Engineer II - SRE/DevOps, Mastercard\nRequired: CI/CD");
+  check("job title with ',' vs '-' still matches", t2.titleScore, 10);
 } catch (e) { out.push("ERROR " + e.message + "\n" + e.stack); fails++; }
 out.push("\n" + (fails ? fails + " FAILED" : "ALL PASSED"));
 document.getElementById("out").textContent = out.join("\n");

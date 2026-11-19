@@ -40,7 +40,7 @@ changes, or returning visitors may run old JS against new HTML.
 
 ## The scan (runs entirely in the browser; nothing is uploaded)
 Loaded on `index.html` only, in this order:
-- `js/scan-keywords.js` — ~1,100 known skills/tools/certs across industries
+- `js/scan-keywords.js` — ~1,106 known skills/tools/certs across industries
   (`"Canonical|alias"`, `!` = cert), related-term credit (GitLab CI → CI/CD, Xero →
   accounting), `CASE_SENSITIVE` words, and `AMBIGUOUS` words (Go, R, C, Lean, Swift,
   spoken languages…) that only count in a list or next to context words (`CONTEXT`).
@@ -55,7 +55,10 @@ Loaded on `index.html` only, in this order:
   overridden by in-sentence phrases like "is a plus", "ideally", "must"; either/or groups
   like "ACCA or CIMA" where one covers the rest, always named after a skill the resume
   really has). Generic phrases from requirement lists are filtered by `JUNK`, `VAGUE`,
-  `TASK_VERB` (verb-led task wording) and `TRAIL_ADJ` ("complex technical"); "You have…"
+  `TASK_VERB` (verb-led task wording), `LEAD_ADJ`/`TRAIL_ADJ` ("reliable software systems",
+  "complex technical") and broken fragments ("point to- site"); overlapping known terms count
+  once ("verbal communication skills"); "and/or" joins an either/or list; job titles match
+  across "/", "," and "-" ("Cloud Infrastructure / DevOps Engineer"); "You have…"
   is not a Required signal (Preferred lists use it). Dates: many formats (`parseDate`,
   "2019–21", "06/2020", "Summer 2021", "Q3 2022", "since 2019"), role durations
   ("(3 years)") and a stated "N years of experience" fallback.
@@ -82,7 +85,7 @@ sessionStorage keeps only a score snapshot (`ats-last-scan`, no resume text) so 
 of the same job description can show "Since your first scan", plus ticked fixes.
 
 ## Tests
-`tests/scan-tests.html` — 69 regression tests for the scan (keyword detection, ambiguous
+`tests/scan-tests.html` — 77 regression tests for the scan (keyword detection, ambiguous
 words, Required/Preferred, dates, either/or, and the bugs from the Jobscan comparison).
 Serve the folder (e.g. `python3 -m http.server 8765`) and open
 `/tests/scan-tests.html`; the last line says ALL PASSED or how many failed. Add a test
